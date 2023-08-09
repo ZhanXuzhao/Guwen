@@ -1,10 +1,7 @@
 // ignore_for_file: prefer_const_constructors
 
-import 'dart:collection';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
@@ -45,7 +42,7 @@ class MyApp extends StatelessWidget {
       title: 'App Title',
       initialRoute: '/',
       routes: {
-        RouterAddress.homePage: (context) => MyHomePage(
+        '/': (context) => MyHomePage(
               title: "古汉语搜索器",
             ),
         RouterAddress.fileListPage: (context) => FileListPage(),
@@ -183,6 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        automaticallyImplyLeading: false,
       ),
       // homepage body
       body: Padding(
@@ -234,7 +232,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: '请输入搜索正则表达式',
+                      hintText: '请输入搜索正则表达式，如: 先.*后',
                     ),
                     controller: regController,
                   ),
