@@ -86,6 +86,9 @@ class _MyHomePageState extends State<MyHomePage> {
   var searchStatus = "";
   var searchedTextList = <String>[];
 
+  RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
+  late RegExp exp;
+
   @override
   void dispose() {
     regController.dispose();
@@ -97,62 +100,74 @@ class _MyHomePageState extends State<MyHomePage> {
     searchData();
   }
 
-  void readFile(String path) async {
+  Future<int> readFile(String path) async {
     print("read file: $path");
-    if (!path.endsWith('.txt')) {
-      return;
-    }
     File file = File(path);
-    var badLineReg = RegExp('([a-z]|[A-Z])|语料');
+    var lineIndex = 0;
+    Stream<String> lines = file
+        .openRead()
+        .transform(utf8.decoder) // Decode bytes to UTF-8.
+        .transform(LineSplitter()); // Convert stream to individual lines.
     try {
-      var count = 0;
-      var lineIndex = 0;
-      var exp = RegExp(regStr);
-      await file
-          .openRead()
-          .transform(utf8.decoder)
-          .transform(LineSplitter())
-          .forEach((line) {
+      await for (var line in lines) {
+        // print('$line: ${line.length} characters');
+
         if (exp.hasMatch(line) && !badLineReg.hasMatch(line)) {
-          print("reg $regStr ${exp.hasMatch(line)} $line");
-          var s1 = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
-          var fileName = s1;
+          print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
+          var fileName = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
           var s = "$line —— $fileName";
           searchedTextList.add(s);
-          count++;
         }
         lineIndex++;
-      });
+      }
+      print('File is now closed.');
+      // updateUI();
     } catch (e) {
-      print("error ${e.toString()} @file:$path");
+      print('Error: $e');
     }
+    return 1;
   }
 
-  void searchData() {
-    regStr = regController.text;
+  void updateUI() {
+    print("update ui");
+    setState(() {});
+  }
 
-    if (regStr == "") {
-      print("reg empty");
-      regStr = ".*";
-      // return;
-    }
-    searchStatus = "搜索中";
+  Future<void> searchData() async {
+    getReg();
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    searchStatus = "";
     var path = assetsPath;
-    setState(() {
-      searchedTextList.clear();
-    });
+    searchedTextList.clear();
+    // updateUI();
     fileListModel.add(exPathController.text);
     var txtList = filterTextFiles(fileListModel.getAllTxtFile());
     searchTotalFiles = txtList.length;
     searchProgress = 0;
     for (var element in txtList) {
-      readFile(element);
+      var result = await readFile(element);
       searchProgress++;
-      setState(() {});
+
+      // cal time cost
+      var endTime = DateTime.now().millisecondsSinceEpoch;
+      double timeCost = 1.0 * (endTime - startTime) / 1000;
+      searchStatus = "耗时: $timeCost s";
+
+      updateUI();
     }
-    setState(() {});
-    searchStatus = "搜索完成";
-    print("search finished");
+
+    print(
+        "search finished  $searchTotalFiles files get $searchProgress sentence");
+    updateUI();
+  }
+
+  void getReg() {
+    regStr = regController.text;
+    if (regStr == "") {
+      print("reg empty");
+      regStr = ".*";
+    }
+    exp = RegExp(regStr);
   }
 
   @override
@@ -163,6 +178,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    print("ui build");
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -242,15 +258,23 @@ class _MyHomePageState extends State<MyHomePage> {
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                // Text(" $searchStatus"),
-                // Container(
-                //   width: 8,
-                // ),
-                Text("进度 $searchProgress/$searchTotalFiles"),
-                Container(
-                  width: 8,
+                SizedBox(
+                  width: 100,
+                  child: Text("进度 $searchProgress/$searchTotalFiles"),
                 ),
-                Text("总共找到 ${searchedTextList.length} 条数据"),
+                SizedBox(
+                  width: 100,
+                  child: Text("$searchStatus"),
+                ),
+                SizedBox(
+                  width: 150,
+                  child: Text("总共找到 ${searchedTextList.length} 条数据"),
+
+                  // child: Align(
+                  //   alignment: Alignment.centerRight,
+                  //   child: Text("总共找到 ${searchedTextList.length} 条数据"),
+                  // ),
+                ),
               ],
             ),
 
@@ -260,7 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: onSearchButtonClick,
+        onPressed: updateUI,
         tooltip: 'Increment',
         child: const Icon(Icons.search),
       ), // This trailing comma makes auto-formatting nicer for build methods.
