@@ -6,11 +6,45 @@ import 'dart:ffi';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
 import 'package:path/path.dart';
+import 'package:provider/provider.dart';
+
+import 'dir_list.dart';
 
 void main() {
-  runApp(const MyApp());
+  // runApp(const MyApp());
+  // runApp(
+  //   ChangeNotifierProvider(
+  //     create: (context) => FileListModel(),
+  //     child: const MyApp(),
+  //   ),
+  // );
+
+  runApp(
+    // ChangeNotifierProvider(
+    //   create: (context) => FileListModel(),
+    //   child: MaterialApp(
+    //     title: 'Material app title',
+    //     initialRoute: '/',
+    //     routes: {
+    //       RouterAddress.homePage: (context) => MyHomePage(title: "ghy",),
+    //       '/f': (context) =>  FileListPage(),
+    //     },
+    //   ),
+    // ),
+
+    ChangeNotifierProvider(
+      create: (context) => FileListModel(),
+      child: MyApp(),
+    ),
+  );
+}
+
+class RouterAddress {
+  static const String homePage = '/';
+  static const String fileListPage = '/fileListPage';
 }
 
 class MyApp extends StatelessWidget {
@@ -21,16 +55,28 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'App Title',
+      initialRoute: '/',
+      routes: {
+        RouterAddress.homePage: (context) => MyHomePage(
+              title: "古汉语搜索器",
+            ),
+        RouterAddress.fileListPage: (context) => FileListPage(),
+      },
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: ' 古汉语搜索器'),
+      // home: const MyHomePage(title: '古汉语搜索器'),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  static void goHome(BuildContext context) {
+    Navigator.pushNamedAndRemoveUntil(
+        context, RouterAddress.homePage, ModalRoute.withName('/'));
+  }
+
   const MyHomePage({super.key, required this.title});
 
   final String title;
@@ -39,10 +85,11 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
   final myController = TextEditingController();
   var regStr = "";
   var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets";
+  FileListModel fileListModel = FileListModel();
 
   @override
   void dispose() {
@@ -57,41 +104,44 @@ class _MyHomePageState extends State<MyHomePage> {
   var sub;
 
   void loadData(String path, {int max = 10000}) async {
-    var count = 0;
-    var lineIndex = 0;
-    var exp = RegExp(regStr);
-    print(path);
+    print("read file: $path");
+    if (!path.endsWith('.txt')) {
+      return;
+    }
     File file = File(path);
+    var badLineReg = RegExp('([a-z]|[A-Z])|语料');
     try {
+      var count = 0;
+      var lineIndex = 0;
+      var exp = RegExp(regStr);
       await file
-        .openRead()
-        .transform(utf8.decoder)
-        .transform(LineSplitter())
-        .forEach((line) {
-      if (count < max) {
-        if (exp.hasMatch(line)) {
-          var s1 = basename(file.path).replaceAll(RegExp("\\d|.txt"),"");
-          var fileName = s1;
-          // format string
-          var s = "$line —— $fileName";
-          outStrList.add(s);
-          print(s);
-          count++;
+          .openRead()
+          .transform(utf8.decoder)
+          .transform(LineSplitter())
+          .forEach((line) {
+        if (count < max) {
+          if (exp.hasMatch(line) && !badLineReg.hasMatch(line)) {
+            var s1 = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
+            var fileName = s1;
+            // format string
+            var s = "$line —— $fileName";
+            outStrList.add(s);
+            print(s);
+            count++;
+          }
+          lineIndex++;
+        } else {
+          sub.cancel();
+          print("cancel");
         }
-        lineIndex++;
-      } else {
-        sub.cancel();
-        print("cancel");
-      }
-    });
-    setState(() {});
+      });
+      setState(() {});
     } catch (e) {
       print("error ${e.toString()} @file:$path");
     }
-    
   }
 
-  void searchData() {
+  List<String> searchData() {
     regStr = myController.text;
     var path = assetsPath;
 
@@ -100,7 +150,11 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       outStrList.clear();
     });
-    fullListDir(path);
+
+    fileListModel.getAll().forEach((element) {
+      fullListDir(element);
+    });
+    return outStrList;
   }
 
   List<String> outStrList = <String>[];
@@ -134,6 +188,26 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    searchData();
+  }
+
+  @override
+  void didChangeDependencies() {
+    // TODO: implement didChangeDependencies
+    super.didChangeDependencies();
+  }
+
+  // late Future<List<String>> data;
+
+  @override
+  void initState() {
+    super.initState();
+    searchData();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
@@ -160,30 +234,28 @@ class _MyHomePageState extends State<MyHomePage> {
                 Container(
                   width: 8,
                 ),
+                // shaixuan button
                 ElevatedButton(
                   child: const Text('范围'),
                   onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              DirListPage(dirPath: assetsPath)),
-                    );
+                    FileListPage.launch(context, assetsPath);
+                    // Navigator.pushNamed(context, RouterAddress.fileListPage
+                    //     ,
+                    //     arguments: <String, String>{
+                    //       'dirPath': assetsPath,
+                    //     }
+                    //     );
                   },
                 ),
                 Container(
                   width: 8,
                 ),
+                // search button
                 ElevatedButton(
                     child: const Text('搜索'), onPressed: onSearchButtonClick),
               ],
             ),
-            Expanded(
-                child: ListView.builder(
-                    itemCount: outStrList.length,
-                    itemBuilder: (context, index) => Padding(
-                        padding: EdgeInsets.all(4),
-                        child: Text("${outStrList[index]}")))),
+            DataListView(outStrList: outStrList),
           ],
         ),
       ),
@@ -196,145 +268,21 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 }
 
-class FileData {
-  final String name;
-  final String path;
-  final bool isFile;
-
-  const FileData(this.name, this.path, this.isFile);
-}
-
-class DirListPage extends StatelessWidget {
-  // Requiring the list of todos.
-  DirListPage({super.key, required this.dirPath});
-
-  final String dirPath;
-  var fileList = <FileData>[];
-
-  @override
-  Widget build(BuildContext context) {
-    var dir = Directory(dirPath);
-    var subs = <String>[];
-    // dir.listSync().forEach(
-    //   (element) {
-    //   subs.add(element.path);
-    // });
-
-    dir.listSync().forEach((element) {
-      var subPath = element.path;
-      subs.add(subPath);
-      var name = basename(subPath);
-      var fileData = FileData(basename(subPath), subPath,
-          File(subPath).statSync().type == FileSystemEntityType.file);
-      fileList.add(fileData);
-    });
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Dir List'),
-      ),
-      body: Column(
-        children: <Widget>[
-          // ElevatedButton(
-          //   onPressed: () {
-          //     Navigator.pop(context);
-          //   },
-          //   child: const Text('Go back!'),
-          // ),
-          Expanded(child: DirListView(fileList: fileList))
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          //go home
-          // Navigator.push(
-          //   context,
-          //   MyApp(),
-          // );
-        },
-        tooltip: 'confirm',
-        child: const Icon(Icons.check),
-      ),
-    );
-  }
-}
-
-class DirListView extends StatefulWidget {
-  const DirListView({
+class DataListView extends StatelessWidget {
+  const DataListView({
     super.key,
-    required this.fileList,
+    required this.outStrList,
   });
 
-  final List<FileData> fileList;
-
-  @override
-  State<StatefulWidget> createState() => DirListViewState(fileList: fileList);
-}
-
-class DirListViewState extends State<StatefulWidget> {
-  DirListViewState({
-    required this.fileList,
-  });
-  final List<FileData> fileList;
-  List<String> selectedPathList = <String>[];
+  final List<String> outStrList;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: fileList.length,
-      itemBuilder: (context, index) {
-        var path = fileList[index].path;
-        return Stack(
-          children: [
-            ListTile(
-              leading: Icon(
-                  fileList[index].isFile ? Icons.text_snippet : Icons.folder),
-              // trailing: Icon(selectedPathList.contains(fileList[index].path)
-              //     ? Icons.check_box
-              //     : Icons.check_box_outline_blank),
-              title: Text(fileList[index].name),
-              onLongPress: () {
-                if (!fileList[index].isFile) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              DirListPage(dirPath: fileList[index].path)));
-                }
-              },
-              onTap: () {
-                // if (selectedPathList.contains(path)) {
-                //   selectedPathList.remove(path);
-                // } else {
-                //   selectedPathList.add(path);
-                // }
-                // setState(() {});
-                if (!fileList[index].isFile) {
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) =>
-                              DirListPage(dirPath: fileList[index].path)));
-                }
-              },
-            ),
-            Container(
-                alignment: Alignment.centerRight,
-                margin: EdgeInsets.only(right: 32),
-                child: Checkbox(
-                  value: selectedPathList.contains(fileList[index].path),
-                  onChanged: (value) {
-                    if (value == true) {
-                      selectedPathList.add(path);
-                    } else {
-                      selectedPathList.remove(path);
-                    }
-                    setState(() {});
-                  },
-                ))
-          ],
-        );
-      },
-    );
+    return Expanded(
+        child: ListView.builder(
+            itemCount: outStrList.length,
+            itemBuilder: (context, index) => Padding(
+                padding: EdgeInsets.all(4),
+                child: Text("${outStrList[index]}"))));
   }
 }
