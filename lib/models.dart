@@ -33,6 +33,8 @@ class FileListModel extends ChangeNotifier {
   FileListModel._internal() {}
 
   final List<String> selectedFiles = <String>[];
+  var regStr = "";
+  var exPath = "";
 
   void add(String path, {bool notify = true}) {
     if (!contains(path)) {
@@ -74,6 +76,8 @@ class FileListModel extends ChangeNotifier {
   List<String> getAllTxtFile() {
     var filePathList = <String>[];
     selectedFiles.forEach((element) => {getAllFiles(element, filePathList)});
+    // 外部文件
+    getAllFiles(exPath, filePathList);
     var txtList = filterTextFiles(filePathList);
     return txtList;
   }

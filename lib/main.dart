@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 
@@ -79,9 +80,12 @@ class _MyHomePageState extends State<MyHomePage> {
   var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets";
   FileListModel fileListModel = FileListModel();
   var searchProgress = 0;
+  var searchProgressText = "";
   var searchTotalFiles = 0;
   var searchStatus = "";
   var searchedTextList = <String>[];
+  var searchResultText = "";
+  var totalLineCount = 0;
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
@@ -97,6 +101,40 @@ class _MyHomePageState extends State<MyHomePage> {
     searchData();
   }
 
+  Future<void> searchData() async {
+    getReg();
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    searchStatus = "";
+    var path = assetsPath;
+    searchedTextList.clear();
+
+    // ex path
+    var txtList = filterTextFiles(fileListModel.getAllTxtFile());
+
+    searchTotalFiles = txtList.length;
+    searchProgress = 0;
+    for (var element in txtList) {
+      var result = await readFile(element);
+      searchProgress++;
+
+      // cal time cost
+      var endTime = DateTime.now().millisecondsSinceEpoch;
+      double timeCost = 1.0 * (endTime - startTime) / 1000;
+      searchStatus = "耗时: $timeCost s";
+      var percent = NumberFormat("###.#", "en_US")
+          .format(100 * searchProgress / searchTotalFiles);
+      searchProgressText =
+          "文件读取进度: $searchProgress/$searchTotalFiles   $percent%";
+      searchResultText =
+          "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
+      updateUI();
+    }
+
+    print(
+        "search finished  $searchTotalFiles files get $searchProgress sentence");
+    updateUI();
+  }
+
   Future<int> readFile(String path) async {
     print("read file: $path");
     File file = File(path);
@@ -108,13 +146,16 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       await for (var line in lines) {
         // print('$line: ${line.length} characters');
+        bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
+        // bool isMatch = exp.hasMatch(line);
 
-        if (exp.hasMatch(line) && !badLineReg.hasMatch(line)) {
-          print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
+        if (isMatch) {
+          // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
           var fileName = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
           var s = "$line —— $fileName";
           searchedTextList.add(s);
         }
+        totalLineCount++;
         lineIndex++;
       }
       print('File is now closed.');
@@ -130,39 +171,14 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
-  Future<void> searchData() async {
-    getReg();
-    var startTime = DateTime.now().millisecondsSinceEpoch;
-    searchStatus = "";
-    var path = assetsPath;
-    searchedTextList.clear();
-    // updateUI();
-    fileListModel.add(exPathController.text);
-    var txtList = filterTextFiles(fileListModel.getAllTxtFile());
-    searchTotalFiles = txtList.length;
-    searchProgress = 0;
-    for (var element in txtList) {
-      var result = await readFile(element);
-      searchProgress++;
-
-      // cal time cost
-      var endTime = DateTime.now().millisecondsSinceEpoch;
-      double timeCost = 1.0 * (endTime - startTime) / 1000;
-      searchStatus = "耗时: $timeCost s";
-
-      updateUI();
-    }
-
-    print(
-        "search finished  $searchTotalFiles files get $searchProgress sentence");
-    updateUI();
-  }
+  
 
   void getReg() {
     regStr = regController.text;
     if (regStr == "") {
-      print("reg empty");
       regStr = ".*";
+    } else {
+      fileListModel.regStr = regStr;
     }
     exp = RegExp(regStr);
   }
@@ -173,8 +189,12 @@ class _MyHomePageState extends State<MyHomePage> {
     searchData();
   }
 
+  //page build
   @override
   Widget build(BuildContext context) {
+    regController.text =
+        fileListModel.regStr == ".*" ? "" : fileListModel.regStr;
+    exPathController.text = fileListModel.exPath;
     print("ui build");
     return Scaffold(
       appBar: AppBar(
@@ -198,6 +218,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: '输入外部路径（可选）',
                     ),
                     controller: exPathController,
+                    onChanged: (value) {
+                      fileListModel.exPath = value;
+                      print("onChange $value");
+                    },
                   ),
                 ),
 
@@ -234,6 +258,10 @@ class _MyHomePageState extends State<MyHomePage> {
                       border: OutlineInputBorder(),
                       hintText: '请输入搜索正则表达式，如: 先.*后',
                     ),
+                    onChanged: (value) {
+                      fileListModel.regStr = value;
+                      print("onChange $value");
+                    },
                     controller: regController,
                   ),
                 ),
@@ -254,25 +282,28 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             // seach info row
             Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                SizedBox(
-                  width: 100,
-                  child: Text("进度 $searchProgress/$searchTotalFiles"),
-                ),
-                SizedBox(
-                  width: 100,
-                  child: Text("$searchStatus"),
-                ),
-                SizedBox(
-                  width: 150,
-                  child: Text("总共找到 ${searchedTextList.length} 条数据"),
+                Text(searchProgressText),
+                Text(searchStatus),
+                Text(searchResultText),
+                // SizedBox(
+                //   width: 150,
+                //   child: Text(searchProgressText),
+                // ),
+                // SizedBox(
+                //   width: 150,
+                //   child: Text(searchStatus),
+                // ),
+                // SizedBox(
+                //   width: 200,
+                //   child: Text(searchResultText),
 
-                  // child: Align(
-                  //   alignment: Alignment.centerRight,
-                  //   child: Text("总共找到 ${searchedTextList.length} 条数据"),
-                  // ),
-                ),
+                //   // child: Align(
+                //   //   alignment: Alignment.centerRight,
+                //   //   child: Text("总共找到 ${searchedTextList.length} 条数据"),
+                //   // ),
+                // ),
               ],
             ),
 
