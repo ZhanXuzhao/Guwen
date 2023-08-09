@@ -44,8 +44,8 @@ class FileListPage extends StatelessWidget {
     //   subs.add(element.path);
     // });
 
-    dir.listSync().forEach((element) {
-      var subPath = element.path;
+    listDir(dirPath).forEach((element) {
+      var subPath = element;
       subs.add(subPath);
       var name = basename(subPath);
       var fileData = FileData(basename(subPath), subPath,

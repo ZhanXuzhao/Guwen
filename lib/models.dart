@@ -21,6 +21,7 @@ List<String> listDir(String path) {
   dir.listSync().forEach((element) {
     subs.add(element.path);
   });
+  subs.sort();
   return subs;
 }
 
@@ -44,7 +45,7 @@ class FileListModel extends ChangeNotifier {
       });
     }
 
-    notifyListeners();
+    // notifyListeners();
   }
 
   void remove(String path, {bool notify = true}) {
@@ -54,7 +55,7 @@ class FileListModel extends ChangeNotifier {
         remove(element, notify: false);
       });
     }
-    notifyListeners();
+    // notifyListeners();
   }
 
   bool contains(String path) {
@@ -63,10 +64,31 @@ class FileListModel extends ChangeNotifier {
 
   void removeAll() {
     selectedFiles.clear();
-    notifyListeners();
+    // notifyListeners();
   }
 
   List<String> getAll() {
     return selectedFiles;
   }
+
+  List<String> getAllTxtFile() {
+    var filePathList = <String>[];
+    selectedFiles.forEach((element) => {getAllFiles(element, filePathList)});
+    var txtList = filterTextFiles(filePathList);
+    return txtList;
+  }
+}
+
+void getAllFiles(String path, List<String> list) {
+  if (isDir(path)) {
+    listDir(path).forEach((element) {
+      getAllFiles(element, list);
+    });
+  } else {
+    list.add(path);
+  }
+}
+
+List<String> filterTextFiles(List<String> list) {
+  return list.where((element) => element.endsWith('.txt')).toList();
 }

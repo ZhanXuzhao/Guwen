@@ -23,18 +23,6 @@ void main() {
   // );
 
   runApp(
-    // ChangeNotifierProvider(
-    //   create: (context) => FileListModel(),
-    //   child: MaterialApp(
-    //     title: 'Material app title',
-    //     initialRoute: '/',
-    //     routes: {
-    //       RouterAddress.homePage: (context) => MyHomePage(title: "ghy",),
-    //       '/f': (context) =>  FileListPage(),
-    //     },
-    //   ),
-    // ),
-
     ChangeNotifierProvider(
       create: (context) => FileListModel(),
       child: MyApp(),
@@ -77,7 +65,7 @@ class MyHomePage extends StatefulWidget {
         context, RouterAddress.homePage, ModalRoute.withName('/'));
   }
 
-  const MyHomePage({super.key, required this.title});
+  MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -85,15 +73,23 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
-  final myController = TextEditingController();
+// home page state
+class _MyHomePageState extends State<MyHomePage> {
+  final regController = TextEditingController();
+  final exPathController = TextEditingController();
+
   var regStr = "";
   var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets";
   FileListModel fileListModel = FileListModel();
+  var searchProgress = 0;
+  var searchTotalFiles = 0;
+  var searchStatus = "";
+  var searchedTextList = <String>[];
 
   @override
   void dispose() {
-    myController.dispose();
+    regController.dispose();
+    exPathController.dispose();
     super.dispose();
   }
 
@@ -101,9 +97,7 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
     searchData();
   }
 
-  var sub;
-
-  void loadData(String path, {int max = 10000}) async {
+  void readFile(String path) async {
     print("read file: $path");
     if (!path.endsWith('.txt')) {
       return;
@@ -119,87 +113,47 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
           .transform(utf8.decoder)
           .transform(LineSplitter())
           .forEach((line) {
-        if (count < max) {
-          if (exp.hasMatch(line) && !badLineReg.hasMatch(line)) {
-            var s1 = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
-            var fileName = s1;
-            // format string
-            var s = "$line —— $fileName";
-            outStrList.add(s);
-            print(s);
-            count++;
-          }
-          lineIndex++;
-        } else {
-          sub.cancel();
-          print("cancel");
+        if (exp.hasMatch(line) && !badLineReg.hasMatch(line)) {
+          print("reg $regStr ${exp.hasMatch(line)} $line");
+          var s1 = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
+          var fileName = s1;
+          var s = "$line —— $fileName";
+          searchedTextList.add(s);
+          count++;
         }
+        lineIndex++;
       });
-      setState(() {});
     } catch (e) {
       print("error ${e.toString()} @file:$path");
     }
   }
 
-  List<String> searchData() {
-    regStr = myController.text;
+  void searchData() {
+    regStr = regController.text;
+
+    if (regStr == "") {
+      print("reg empty");
+      regStr = ".*";
+      // return;
+    }
+    searchStatus = "搜索中";
     var path = assetsPath;
-
-    // clear pre data
-
     setState(() {
-      outStrList.clear();
+      searchedTextList.clear();
     });
-
-    fileListModel.getAll().forEach((element) {
-      fullListDir(element);
-    });
-    return outStrList;
-  }
-
-  List<String> outStrList = <String>[];
-
-  void fullListDir(String path) async {
-    print("fullListDir $path");
-    var f = File(path);
-    if (!f.existsSync()) {
-      print('file $f NOT exist');
+    fileListModel.add(exPathController.text);
+    var txtList = filterTextFiles(fileListModel.getAllTxtFile());
+    searchTotalFiles = txtList.length;
+    searchProgress = 0;
+    for (var element in txtList) {
+      readFile(element);
+      searchProgress++;
+      setState(() {});
     }
-    if (f.statSync().type == FileSystemEntityType.file) {
-      loadData(path);
-    } else {
-      // load dir
-      var dir = Directory(path);
-      List<String> pList = <String>[];
-      // dir.list().forEach((element) {
-      //   pList.add(element.path);
-      // });
-
-      await for (var entity in dir.list(recursive: false, followLinks: false)) {
-        // print(entity.path);
-        pList.add(entity.path);
-      }
-
-      pList.sort();
-      pList.forEach((element) {
-        fullListDir(element);
-      });
-    }
+    setState(() {});
+    searchStatus = "搜索完成";
+    print("search finished");
   }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    super.didChangeAppLifecycleState(state);
-    searchData();
-  }
-
-  @override
-  void didChangeDependencies() {
-    // TODO: implement didChangeDependencies
-    super.didChangeDependencies();
-  }
-
-  // late Future<List<String>> data;
 
   @override
   void initState() {
@@ -218,8 +172,46 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
+            // ex path row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: '输入外部路径（可选）',
+                    ),
+                    controller: exPathController,
+                  ),
+                ),
+
+                Container(
+                  width: 8,
+                ),
+                // shaixuan button
+                SizedBox(
+                  width: 150,
+                  child: ElevatedButton(
+                    child: const Text('选择内部文件'),
+                    onPressed: () {
+                      FileListPage.launch(context, assetsPath);
+                      // Navigator.pushNamed(context, RouterAddress.fileListPage
+                      //     ,
+                      //     arguments: <String, String>{
+                      //       'dirPath': assetsPath,
+                      //     }
+                      //     );
+                    },
+                  ),
+                )
+              ],
+            ),
+            Container(
+              height: 8,
+            ),
+            // regex row
             Row(
               children: [
                 Expanded(
@@ -228,34 +220,42 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
                       border: OutlineInputBorder(),
                       hintText: '请输入搜索正则表达式',
                     ),
-                    controller: myController,
+                    controller: regController,
                   ),
                 ),
+
                 Container(
                   width: 8,
                 ),
-                // shaixuan button
-                ElevatedButton(
-                  child: const Text('范围'),
-                  onPressed: () {
-                    FileListPage.launch(context, assetsPath);
-                    // Navigator.pushNamed(context, RouterAddress.fileListPage
-                    //     ,
-                    //     arguments: <String, String>{
-                    //       'dirPath': assetsPath,
-                    //     }
-                    //     );
-                  },
-                ),
-                Container(
-                  width: 8,
-                ),
+                SizedBox(
+                  width: 150,
+                  child: ElevatedButton(
+                      onPressed: onSearchButtonClick, child: const Text('搜索')),
+                )
                 // search button
-                ElevatedButton(
-                    child: const Text('搜索'), onPressed: onSearchButtonClick),
               ],
             ),
-            DataListView(outStrList: outStrList),
+            Container(
+              height: 8,
+            ),
+            // seach info row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // Text(" $searchStatus"),
+                // Container(
+                //   width: 8,
+                // ),
+                Text("进度 $searchProgress/$searchTotalFiles"),
+                Container(
+                  width: 8,
+                ),
+                Text("总共找到 ${searchedTextList.length} 条数据"),
+              ],
+            ),
+
+            // date list
+            DataListView(textList: searchedTextList),
           ],
         ),
       ),
@@ -271,18 +271,18 @@ class _MyHomePageState extends State<MyHomePage> with WidgetsBindingObserver {
 class DataListView extends StatelessWidget {
   const DataListView({
     super.key,
-    required this.outStrList,
+    required this.textList,
   });
 
-  final List<String> outStrList;
+  final List<String> textList;
 
   @override
   Widget build(BuildContext context) {
     return Expanded(
         child: ListView.builder(
-            itemCount: outStrList.length,
+            itemCount: textList.length,
             itemBuilder: (context, index) => Padding(
                 padding: EdgeInsets.all(4),
-                child: Text("${outStrList[index]}"))));
+                child: Text("${textList[index]}"))));
   }
 }
