@@ -1,8 +1,4 @@
-import 'dart:collection';
-import 'dart:convert';
-import 'dart:ffi';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:f05/main.dart';
 import 'package:flutter/material.dart';
@@ -17,6 +13,7 @@ class FileListPageArg {
   FileListPageArg(this.path);
 }
 
+// file list page
 class FileListPage extends StatelessWidget {
   // Requiring the list of todos.
   FileListPage({super.key});
@@ -39,10 +36,6 @@ class FileListPage extends StatelessWidget {
     }
     var dir = Directory(dirPath);
     var subs = <String>[];
-    // dir.listSync().forEach(
-    //   (element) {
-    //   subs.add(element.path);
-    // });
 
     listDir(dirPath).forEach((element) {
       var subPath = element;
@@ -59,22 +52,11 @@ class FileListPage extends StatelessWidget {
       ),
       body: Column(
         children: <Widget>[
-          // ElevatedButton(
-          //   onPressed: () {
-          //     Navigator.pop(context);
-          //   },
-          //   child: const Text('Go back!'),
-          // ),
           Expanded(child: DirListView(fileList: fileList))
         ],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          //go home
-          // Navigator.pushNamedAndRemoveUntil(
-          //   context,
-          //   RouterAddress.homePage,ModalRoute.withName('/')
-          // );
           MyHomePage.goHome(context);
         },
         tooltip: 'confirm',
