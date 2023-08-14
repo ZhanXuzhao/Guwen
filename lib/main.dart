@@ -11,6 +11,10 @@ import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
 
+const String TextFilePath = "C:/Dev/语料";
+// const String TextFilePath =
+//     "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/语料";
+
 void main() {
   // runApp(const MyApp());
   // runApp(
@@ -73,13 +77,13 @@ class MyHomePage extends StatefulWidget {
 
 // home page state
 class _MyHomePageState extends State<MyHomePage> {
-  late BuildContext mContext;
+  BuildContext? mContext;
   final regController = TextEditingController();
   final extralPathController = TextEditingController();
   final exportPathController = TextEditingController();
 
   var regStr = "";
-  var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/语料";
+  var assetsPath = TextFilePath;
   AppModel appModel = AppModel();
   var searchProgress = 0;
   var searchProgressText = "";
@@ -182,7 +186,12 @@ class _MyHomePageState extends State<MyHomePage> {
     var snackBar = SnackBar(
       content: Text(msg),
     );
-    ScaffoldMessenger.of(mContext).showSnackBar(snackBar);
+    if(mContext==null){
+      print('mContext is null');
+    } else {
+      ScaffoldMessenger.of(mContext!!).showSnackBar(snackBar);
+    }
+    
   }
 
   void updateUI() {

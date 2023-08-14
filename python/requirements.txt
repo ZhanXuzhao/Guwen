@@ -1,0 +1,8 @@
+chardet==5.2.0
+Django==4.2.4
+LAC==2.1.2
+LAC==2.1.2
+ltp==4.2.13
+psyco==1.6
+Requests==2.31.0
+tqdm==4.66.1

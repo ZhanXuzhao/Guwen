@@ -47,7 +47,7 @@ class FileListPage extends StatelessWidget {
           File(path).statSync().type == FileSystemEntityType.file);
 
       if (file.statSync().type == FileSystemEntityType.file) {
-        if (path.endsWith('.txt')) {
+        if (path.endsWith('.txt') || path.endsWith('.TXT')) {
           fileList.add(fileData);
           
         } else {

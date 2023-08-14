@@ -4,6 +4,7 @@
 # 测试主文件：语料文本语言编码转码与内容数据初步清洗 - 作者：i126@126.com
 ########################################################################################################
 
+# from src.utils import toutf8, filter
 from src.utils import toutf8, filter
 
 file_ext = '.txt|.csv'
@@ -11,6 +12,10 @@ inputfile = ''
 inputpath = './input/01先秦/十三经'
 outpath  = './output/01先秦/十三经'
 
+#  init project reqs 
+# pip install pipreqs
+# pipreqs --encoding=utf8
+# pip install -r requirements.txt
 
 # 程序入口
 if __name__ == '__main__':
@@ -35,7 +40,7 @@ if __name__ == '__main__':
 
     # filter.recodeTxt('/Users/zhanxuzhao/Dev/text2text/input')
 
-    path = '/Users/zhanxuzhao/Dev/text2text/input'
+    path = "C:\\Dev\\语料"
     # xls doc 
     # filter.delUnrelatedFile(path)
     filter.recodeTxt(path)
