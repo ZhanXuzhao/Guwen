@@ -79,7 +79,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final exportPathController = TextEditingController();
 
   var regStr = "";
-  var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/guwen";
+  var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/语料";
   AppModel appModel = AppModel();
   var searchProgress = 0;
   var searchProgressText = "";
@@ -100,10 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void onSearchButtonClick() {
-    searchData();
-  }
-
   Future<void> searchData() async {
     getReg();
     var startTime = DateTime.now().millisecondsSinceEpoch;
@@ -117,7 +113,8 @@ class _MyHomePageState extends State<MyHomePage> {
     searchProgress = 0;
     for (var element in txtList) {
       // var result = await readFile(element);
-      var result = await readFile(element);
+      var readResult = await readFile(element);
+      print(readResult);
 
       searchProgress++;
 
@@ -137,9 +134,10 @@ class _MyHomePageState extends State<MyHomePage> {
     print(
         "search finished  $searchTotalFiles files get $searchProgress sentence");
     updateUI();
+    showMessage("查询完成");
   }
 
-  Future<int> readFile(String path) async {
+  Future<String> readFile(String path) async {
     print("read file: $path");
     File file = File(path);
     Stream<String> lines = file
@@ -159,7 +157,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
             var s = "$line —— $fileName";
             searchedTextList.add(s);
-            print('line: $line');
+            // print('line: $line');
           }
           totalLineCount++;
         }
@@ -168,8 +166,9 @@ class _MyHomePageState extends State<MyHomePage> {
       // updateUI();
     } catch (e) {
       print('Error: $e');
+      return "fail: $e";
     }
-    return 1;
+    return "success";
   }
 
   String getFileDirLocation(String filePath) {
@@ -251,7 +250,7 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       // homepage body
       body: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
@@ -315,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   width: 150,
                   child: ElevatedButton(
-                      onPressed: onSearchButtonClick, child: const Text('搜索')),
+                      onPressed: searchData, child: const Text('搜索')),
                 )
                 // search button
               ],
@@ -403,7 +402,7 @@ class DataListView extends StatelessWidget {
       "----": HighlightedWord(textStyle: highlightTextStyle)
     };
     for (String w in AppModel().highlightWords) {
-      if(w.isEmpty){
+      if (w.isEmpty) {
         continue;
       }
       var entry = MapEntry(
@@ -435,7 +434,5 @@ class DataListView extends StatelessWidget {
     //             child: Text(
     //               textList[index],
     //             ))));
-
-
   }
 }
