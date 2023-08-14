@@ -372,9 +372,36 @@ class filter:
         if line == '\n': line = ''
         return line
 
-    def file(inputfile, outpath, file_ext='.txt|.csv', flag=''):
+    # def file(inputfile, outpath, file_ext='.txt|.csv', flag=''):
+    #     """ 单文件数据清洗，带进度条 """
+    #     out_txt = outpath + '/' + os.path.basename(inputfile)
+    #     total = sum(1 for _ in open(inputfile))
+    #     with open(inputfile, "r", encoding='utf-8') as f1, \
+    #             open(out_txt, "w", encoding='utf-8') as f2, tqdm(
+    #                 desc='文件：' + os.path.basename(inputfile) + ' 编码：' + notes + ' ',
+    #                 unit=' 行',
+    #                 total=total,
+    #                 unit_scale=True,
+    #                 ncols=120,
+    #         ) as bar:
+    #         for line in f1:
+    #             line = filter.linedata(line,flag)
+    #             time.sleep(0.001)
+    #             bar.update()
+    #             if line == ' ' or line == '':
+    #                 line = line.strip("")
+    #                 f2.write(line)
+    #             else:
+    #                 f2.write("{}\n".format(line))
+    #         bar.close()
+    #         f2.write('\n')
+    #         f2.close()
+
+    #     #print(out_txt,' 初级数据清洗完毕！')
+
+    def file(inputfile, inputpath, file_ext='.txt|.csv', flag=''):
         """ 单文件数据清洗，带进度条 """
-        out_txt = outpath + '/' + os.path.basename(inputfile)
+        out_txt = inputfile.replace(inputpath, inputpath+"_recode")
         total = sum(1 for _ in open(inputfile))
         with open(inputfile, "r", encoding='utf-8') as f1, \
                 open(out_txt, "w", encoding='utf-8') as f2, tqdm(
@@ -399,22 +426,59 @@ class filter:
 
         #print(out_txt,' 初级数据清洗完毕！')
 
-    def allpath(input_path, outpath, file_ext='.txt|.csv', flag=''):
+    # def allpath(input_path, outpath, file_ext='.txt|.csv', flag=''):
+    #     """ 目录级数据清洗，含所有子目录下文件 """
+    #     print('='*50,'数据清洗中','='*50)
+    #     for dirpath, dirnames, filenames in os.walk(input_path):
+    #         for filename in filenames:
+    #             try:
+    #                 if os.path.splitext(filename)[1].lower() in file_ext:
+    #                     full_path_of_file = dirpath + "/" + filename
+    #                     # 强制转码UTF-8
+    #                     toutf8.file_txt_encoding_to_utf8(full_path_of_file, file_ext)
+    #                     # 逐个文件清洗
+    #                     filter.file(full_path_of_file,outpath,file_ext,flag)
+    #             except Exception as ERR:
+    #                 print('Error:', ERR)
+    #     print('=' * 50, '数据清洗完成', '=' * 50)
+
+    def delUnrelatedFile(input_path):
+        for dirpath, dirnames, filenames in os.walk(input_path):
+            for filename in filenames:
+                print(dirpath, dirnames, filenames)
+                if(filename.endswith('.DOC')or filename.endswith('.doc') or filename.endswith('.XLS')or filename.endswith('.xls')):
+                    full_path = dirpath +'/'+ filename
+                    os.remove(full_path)
+                    print("=======  delete success: ",full_path)
+                
+                
+
+    def recodeTxt(input_path):
+        outpath=input_path + "_recode"
+        file_ext='.txt|.csv'
+        flag=''
+        if not os.path.exists(outpath):
+            os.makedirs(outpath)
+
         """ 目录级数据清洗，含所有子目录下文件 """
         print('='*50,'数据清洗中','='*50)
         for dirpath, dirnames, filenames in os.walk(input_path):
+            print('dirpath: \t', dirpath, 'dirnames: \t', dirnames, 'filenames: \t', filenames)
             for filename in filenames:
                 try:
+                    # check file is txt
                     if os.path.splitext(filename)[1].lower() in file_ext:
                         full_path_of_file = dirpath + "/" + filename
+                        print(full_path_of_file)
                         # 强制转码UTF-8
                         toutf8.file_txt_encoding_to_utf8(full_path_of_file, file_ext)
                         # 逐个文件清洗
-                        filter.file(full_path_of_file,outpath,file_ext,flag)
+                        # filter.file(full_path_of_file,input_path,file_ext,flag)
+                    print('filename:', filename)
                 except Exception as ERR:
                     print('Error:', ERR)
         print('=' * 50, '数据清洗完成', '=' * 50)
-
+    
 
 class toutf8:
     """ 转码utf-8类 """
