@@ -403,6 +403,9 @@ class DataListView extends StatelessWidget {
       "----": HighlightedWord(textStyle: highlightTextStyle)
     };
     for (String w in AppModel().highlightWords) {
+      if(w.isEmpty){
+        continue;
+      }
       var entry = MapEntry(
           w,
           HighlightedWord(
@@ -414,24 +417,24 @@ class DataListView extends StatelessWidget {
       hightWords.addEntries([entry]);
     }
     print("build text list view2");
-    // return Expanded(
-    //     child: ListView.builder(
-    //         itemCount: textList.length,
-    //         itemBuilder: (context, index) => Padding(
-    //             padding: EdgeInsets.all(4),
-    //             child: TextHighlight(
-    //               text: textList[index],
-    //               words: hightWords,
-    //             ))));
-
     return Expanded(
         child: ListView.builder(
             itemCount: textList.length,
             itemBuilder: (context, index) => Padding(
                 padding: EdgeInsets.all(4),
-                child: Text(
-                  textList[index],
+                child: TextHighlight(
+                  text: textList[index],
+                  words: hightWords,
                 ))));
+
+    // return Expanded(
+    //     child: ListView.builder(
+    //         itemCount: textList.length,
+    //         itemBuilder: (context, index) => Padding(
+    //             padding: EdgeInsets.all(4),
+    //             child: Text(
+    //               textList[index],
+    //             ))));
 
 
   }
