@@ -1,3 +1,5 @@
+// ignore_for_file: unused_import, avoid_print
+
 import 'dart:io';
 
 import 'package:f05/main.dart';
@@ -14,6 +16,7 @@ class FileListPageArg {
 }
 
 // file list page
+// ignore: must_be_immutable
 class FileListPage extends StatelessWidget {
   // Requiring the list of todos.
   FileListPage({super.key});
@@ -30,20 +33,29 @@ class FileListPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var arg = ModalRoute.of(context)!.settings.arguments as FileListPageArg;
     dirPath = arg.path;
-    if (dirPath == null || dirPath.isEmpty) {
+    if (dirPath.isEmpty) {
       print('error, dirPath not set');
       // throw Exception('error, dirPath not set');
     }
-    var dir = Directory(dirPath);
     var subs = <String>[];
 
-    listDir(dirPath).forEach((element) {
-      var subPath = element;
-      subs.add(subPath);
-      var name = basename(subPath);
-      var fileData = FileData(basename(subPath), subPath,
-          File(subPath).statSync().type == FileSystemEntityType.file);
-      fileList.add(fileData);
+    listDir(dirPath).forEach((path) {
+      File file = File(path);
+
+      subs.add(path);
+      var fileData = FileData(basename(path), path,
+          File(path).statSync().type == FileSystemEntityType.file);
+
+      if (file.statSync().type == FileSystemEntityType.file) {
+        if (path.endsWith('.txt')) {
+          fileList.add(fileData);
+          
+        } else {
+          print('non txt file: $path');
+        }
+      } else {
+        fileList.add(fileData);
+      }
     });
 
     return Scaffold(
@@ -51,9 +63,7 @@ class FileListPage extends StatelessWidget {
         title: const Text('选择文件'),
       ),
       body: Column(
-        children: <Widget>[
-          Expanded(child: DirListView(fileList: fileList))
-        ],
+        children: <Widget>[Expanded(child: DirListView(fileList: fileList))],
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -75,6 +85,7 @@ class DirListView extends StatefulWidget {
   final List<FileData> fileList;
 
   @override
+  // ignore: no_logic_in_create_state
   State<StatefulWidget> createState() => DirListViewState(fileList: fileList);
 }
 
@@ -84,12 +95,10 @@ class DirListViewState extends State<StatefulWidget> {
   });
   final List<FileData> fileList;
   // List<String> selectedPathList = <String>[];
-  late AppModel fileListModel;
+  late AppModel appModel = AppModel();
 
   @override
   Widget build(BuildContext context) {
-    fileListModel = Provider.of<AppModel>(context, listen: false);
-
     return ListView.builder(
       itemCount: fileList.length,
       itemBuilder: (context, index) {
@@ -108,14 +117,14 @@ class DirListViewState extends State<StatefulWidget> {
             ),
             Container(
                 alignment: Alignment.centerRight,
-                margin: EdgeInsets.only(right: 32),
+                margin: const EdgeInsets.only(right: 32),
                 child: Checkbox(
-                  value: fileListModel.contains(fileList[index].path),
+                  value: appModel.contains(fileList[index].path),
                   onChanged: (value) {
                     if (value == true) {
-                      fileListModel.add(path);
+                      appModel.add(path);
                     } else {
-                      fileListModel.remove(path);
+                      appModel.remove(path);
                     }
                     setState(() {});
                   },

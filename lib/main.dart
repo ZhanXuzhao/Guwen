@@ -1,4 +1,4 @@
-// ignore_for_file: prefer_const_constructors
+// ignore_for_file: prefer_const_constructors, avoid_print
 
 import 'dart:convert';
 import 'dart:io';
@@ -7,7 +7,6 @@ import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart';
 import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
@@ -64,7 +63,7 @@ class MyHomePage extends StatefulWidget {
         context, RouterAddress.homePage, ModalRoute.withName('/'));
   }
 
-  MyHomePage({super.key, required this.title});
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -74,6 +73,7 @@ class MyHomePage extends StatefulWidget {
 
 // home page state
 class _MyHomePageState extends State<MyHomePage> {
+  late BuildContext mContext;
   final regController = TextEditingController();
   final extralPathController = TextEditingController();
   final exportPathController = TextEditingController();
@@ -108,7 +108,6 @@ class _MyHomePageState extends State<MyHomePage> {
     getReg();
     var startTime = DateTime.now().millisecondsSinceEpoch;
     searchStatus = "";
-    var path = assetsPath;
     searchedTextList.clear();
 
     // ex path
@@ -117,7 +116,9 @@ class _MyHomePageState extends State<MyHomePage> {
     searchTotalFiles = txtList.length;
     searchProgress = 0;
     for (var element in txtList) {
+      // var result = await readFile(element);
       var result = await readFile(element);
+
       searchProgress++;
 
       // cal time cost
@@ -146,23 +147,22 @@ class _MyHomePageState extends State<MyHomePage> {
         .transform(utf8.decoder) // Decode bytes to UTF-8.
         .transform(LineSplitter()); // Convert stream to individual lines.
     try {
-      await for (var line in lines) {
-        bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
-        // bool isMatch = exp.hasMatch(line);
+      await for (var longLine in lines) {
+        var subLines = longLine.split(RegExp('。'));
+        for (var line in subLines) {
+          bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
+          // bool isMatch = exp.hasMatch(line);
 
-        if (isMatch) {
-          // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
-          var subLines = line.split(RegExp('。|\？'));
-          for (var l in subLines) {
-            var fileName =
-                basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
-            var s = "$l —— $fileName";
+          if (isMatch) {
+            // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
+            var fileName = getFileDirLocation(file.path);
+            // basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
+            var s = "$line —— $fileName";
             searchedTextList.add(s);
-            print('line: $l');
+            print('line: $line');
           }
+          totalLineCount++;
         }
-        totalLineCount++;
-        // print('$line: ${line.length} characters');
       }
       print('File is now closed.');
       // updateUI();
@@ -170,6 +170,20 @@ class _MyHomePageState extends State<MyHomePage> {
       print('Error: $e');
     }
     return 1;
+  }
+
+  String getFileDirLocation(String filePath) {
+    return filePath
+        .replaceAll(assetsPath, "")
+        .replaceAll(extralPathController.text, "")
+        .replaceAll(RegExp("\\d|.txt"), "");
+  }
+
+  void showMessage(String msg) {
+    var snackBar = SnackBar(
+      content: Text(msg),
+    );
+    ScaffoldMessenger.of(mContext).showSnackBar(snackBar);
   }
 
   void updateUI() {
@@ -194,20 +208,21 @@ class _MyHomePageState extends State<MyHomePage> {
   void exportSearchResult() async {
     var path = exportPathController.text;
     if (path.isEmpty) {
-      print('warning: export path is empty');
+      showMessage("请指定导出路径");
       return;
     }
     appModel.exportPath = path;
-    var file = File("${path}/${getExportFileName()}.txt");
+    var file = File("$path/${getExportFileName()}.txt");
     file.create(recursive: true);
     print('export file $file');
     for (var line in searchedTextList) {
-      print('write ${line}');
+      print('write $line');
       file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
       // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
     }
 
     print('export success');
+    showMessage("导出成功");
   }
 
   String getExportFileName() {
@@ -223,6 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
   //page build
   @override
   Widget build(BuildContext context) {
+    mContext = context;
     regController.text = appModel.regStr == ".*" ? "" : appModel.regStr;
     extralPathController.text = appModel.extralPath;
     exportPathController.text = appModel.exportPath;
@@ -265,7 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: ElevatedButton(
                     child: const Text('选择内部文件'),
                     onPressed: () {
-
+                      FileListPage.launch(context, assetsPath);
                     },
                   ),
                 )
@@ -348,7 +364,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 Text(searchProgressText),
                 Text(searchStatus),
                 Text(searchResultStaticText),
-
               ],
             ),
 
@@ -399,15 +414,25 @@ class DataListView extends StatelessWidget {
       hightWords.addEntries([entry]);
     }
     print("build text list view2");
+    // return Expanded(
+    //     child: ListView.builder(
+    //         itemCount: textList.length,
+    //         itemBuilder: (context, index) => Padding(
+    //             padding: EdgeInsets.all(4),
+    //             child: TextHighlight(
+    //               text: textList[index],
+    //               words: hightWords,
+    //             ))));
+
     return Expanded(
         child: ListView.builder(
             itemCount: textList.length,
             itemBuilder: (context, index) => Padding(
                 padding: EdgeInsets.all(4),
-                child: TextHighlight(
-                  text: "${textList[index]}",
-                  words: hightWords,
+                child: Text(
+                  textList[index],
                 ))));
+
 
   }
 }

@@ -30,13 +30,13 @@ class AppModel extends ChangeNotifier {
   factory AppModel() {
     return _instance;
   }
-  AppModel._internal() {}
+  AppModel._internal();
 
   final List<String> selectedFiles = <String>[];
   var regStr = "";
   var extralPath = "";
   var exportPath = "";
-  List<String> highlightWords=<String>[];
+  List<String> highlightWords = <String>[];
 
   void add(String path, {bool notify = true}) {
     if (!contains(path)) {
@@ -77,7 +77,9 @@ class AppModel extends ChangeNotifier {
 
   List<String> getAllTxtFile() {
     var filePathList = <String>[];
-    selectedFiles.forEach((element) => getAllFiles(element, filePathList));
+    for (var element in selectedFiles) {
+      getAllFiles(element, filePathList);
+    }
     // 外部文件
     getAllFiles(extralPath, filePathList);
     var txtList = filterTextFiles(filePathList);
