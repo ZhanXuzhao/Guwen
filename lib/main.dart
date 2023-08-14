@@ -16,13 +16,6 @@ const String TextFilePath = "C:/Dev/语料";
 //     "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/语料";
 
 void main() {
-  // runApp(const MyApp());
-  // runApp(
-  //   ChangeNotifierProvider(
-  //     create: (context) => FileListModel(),
-  //     child: const MyApp(),
-  //   ),
-  // );
 
   // init app module
   AppModel();
