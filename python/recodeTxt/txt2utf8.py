@@ -1,4 +1,4 @@
-from src.textfile import txtfile
+from sc.textfile import txtfile
 
 file_ext = '.txt|.csv'
 yourpath = '../txt/03古典相关'

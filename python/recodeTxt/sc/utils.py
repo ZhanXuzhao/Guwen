@@ -10,7 +10,7 @@ import re
 import io
 from django.utils.encoding import force_str
 from django.utils.functional import Promise
-from src.langconv import Converter
+from sc.langconv import Converter
 from tqdm import tqdm
 import time
 
@@ -18,7 +18,7 @@ import time
 global notes
 notes = ''
 
-class filter:
+class txtFilter:
     """ 清洗过滤类 """
 
     def is_chinese(uchar):

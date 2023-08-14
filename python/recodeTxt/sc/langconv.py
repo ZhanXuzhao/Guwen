@@ -11,7 +11,7 @@ except:
     pass
 
 
-from src.zh_wiki import zh2Hant, zh2Hans
+from sc.zh_wiki import zh2Hant, zh2Hans
 
 
 import sys

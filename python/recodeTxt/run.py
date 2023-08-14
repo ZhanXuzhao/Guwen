@@ -4,21 +4,34 @@
 # 测试主文件：语料文本语言编码转码与内容数据初步清洗 - 作者：i126@126.com
 ########################################################################################################
 
-# from src.utils import toutf8, filter
-from src.utils import toutf8, filter
+# from sc.utils import toutf8, filter
 
-file_ext = '.txt|.csv'
-inputfile = ''
-inputpath = './input/01先秦/十三经'
-outpath  = './output/01先秦/十三经'
+# from sc.utils import txtFilter
+
+
+from sc.test1 import c1
+from sc.utils import txtFilter
 
 #  init project reqs 
 # pip install pipreqs
 # pipreqs --encoding=utf8
 # pip install -r requirements.txt
+path = "C:\\Dev\\语料\\01先秦"
 
-# 程序入口
+print('\n')
+print('run.py hello')
+
 if __name__ == '__main__':
+    print("main")
+    c1.f1()
+    # filter.delUnrelatedFile(path)
+    txtFilter.recodeTxt(path)
+
+
+
+    
+# # 程序入口
+# if __name__ == '__main__':
     # 入口：
 
     # 整体转换一个目录（含子目录）下所有文本文件
@@ -39,8 +52,8 @@ if __name__ == '__main__':
     # filter.allpath(inputpath, outpath, file_ext)
 
     # filter.recodeTxt('/Users/zhanxuzhao/Dev/text2text/input')
-
-    path = "C:\\Dev\\语料"
-    # xls doc 
-    # filter.delUnrelatedFile(path)
-    filter.recodeTxt(path)
+    # print('main')
+    # path = "C:\\Dev\\语料"
+    # # filter.delUnrelatedFile(path)
+    # # txtFilter.recodeTxt(path)
+    # test1.log()

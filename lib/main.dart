@@ -24,6 +24,9 @@ void main() {
   //   ),
   // );
 
+  // init app module
+  AppModel();
+
   runApp(
     ChangeNotifierProvider(
       create: (context) => AppModel(),
@@ -105,7 +108,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> searchData() async {
-    getReg();
+    var hasReg = getReg();
+    if(!hasReg){
+      return;
+    }
     var startTime = DateTime.now().millisecondsSinceEpoch;
     searchStatus = "";
     searchedTextList.clear();
@@ -116,7 +122,6 @@ class _MyHomePageState extends State<MyHomePage> {
     searchTotalFiles = txtList.length;
     searchProgress = 0;
     for (var element in txtList) {
-      // var result = await readFile(element);
       var readResult = await readFile(element);
       print(readResult);
 
@@ -199,18 +204,21 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
-  void getReg() {
+  bool getReg() {
     regStr = regController.text;
     if (regStr == "") {
-      regStr = ".*";
+      // regStr = ".*";
+      print('no search regex');
+      return false;
     } else {
-      appModel.regStr = regStr;
+      // appModel.setRegStr(regStr);
     }
     exp = RegExp(regStr);
     var rs = regStr.replaceAll(RegExp('[^\u4e00-\u9fa5]+'), ",");
     // var hanziList = rs.split(RegExp(',+'));
     var hanziList = rs.split(',');
     appModel.highlightWords = hanziList;
+    return true;
   }
 
   void exportSearchResult() async {
@@ -219,12 +227,12 @@ class _MyHomePageState extends State<MyHomePage> {
       showMessage("请指定导出路径");
       return;
     }
-    appModel.exportPath = path;
+    // appModel.setExportPath(path);
     var file = File("$path/${getExportFileName()}.txt");
     file.create(recursive: true);
     print('export file $file');
     for (var line in searchedTextList) {
-      print('write $line');
+      // print('write $line');
       file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
       // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
     }
@@ -234,12 +242,22 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   String getExportFileName() {
-    return DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var hws = appModel.highlightWords.join("_");
+    
+    var s = timeStr + "_" + hws;
+    return s;
   }
 
   @override
   void initState() {
     super.initState();
+
+    var rs = appModel.getRegStr();
+    regController.text = rs == ".*" ? "" : rs;
+    extralPathController.text = appModel.getYuliaoPath();
+    exportPathController.text = appModel.getExportPathStr();
+
     searchData();
   }
 
@@ -247,9 +265,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     mContext = context;
-    regController.text = appModel.regStr == ".*" ? "" : appModel.regStr;
-    extralPathController.text = appModel.extralPath;
-    exportPathController.text = appModel.exportPath;
+
     print("ui build");
     return Scaffold(
       appBar: AppBar(
@@ -270,11 +286,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: '输入外部路径（可选）',
+                      hintText: '输入语料路经',
                     ),
                     controller: extralPathController,
                     onChanged: (value) {
-                      appModel.extralPath = value;
+                      appModel.setYuliaoPath(value);
                       print("onChange $value");
                     },
                   ),
@@ -287,7 +303,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(
                   width: 150,
                   child: ElevatedButton(
-                    child: const Text('选择内部文件'),
+                    child: const Text('选择搜索范围'),
                     onPressed: () {
                       FileListPage.launch(context, assetsPath);
                     },
@@ -307,10 +323,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: '请输入搜索正则表达式，如: 先.*后',
+                      hintText: '输入搜索正则表达式，如: 之.*者',
                     ),
                     onChanged: (value) {
-                      appModel.regStr = value;
+                      appModel.setRegStr(value);
                       print("onChange $value");
                     },
                     controller: regController,
@@ -340,10 +356,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     decoration: InputDecoration(
                       border: OutlineInputBorder(),
-                      hintText: '导出路径',
+                      hintText: '输入导出路径',
                     ),
                     onChanged: (value) {
-                      appModel.regStr = value;
+                      appModel.setExportPath(value);
                       print("onChange $value");
                     },
                     controller: exportPathController,
@@ -408,7 +424,7 @@ class DataListView extends StatelessWidget {
     );
 
     Map<String, HighlightedWord> hightWords = {
-      "----": HighlightedWord(textStyle: highlightTextStyle)
+      "————": HighlightedWord(textStyle: highlightTextStyle)
     };
     for (String w in AppModel().highlightWords) {
       if (w.isEmpty) {
