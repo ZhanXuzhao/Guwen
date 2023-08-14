@@ -434,8 +434,5 @@ class DataListView extends StatelessWidget {
     //             child: Text(
     //               textList[index],
     //             ))));
-
-
-    
   }
 }
