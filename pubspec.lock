@@ -75,6 +75,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  highlight_text:
+    dependency: "direct main"
+    description:
+      name: highlight_text
+      sha256: "74806039a02e65e5aef9bb27c2df42b8694700c389ec75b733eb2ac53a84c606"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.7.0"
   intl:
     dependency: "direct main"
     description:
@@ -210,4 +218,4 @@ packages:
     version: "2.1.4"
 sdks:
   dart: ">=3.0.6 <4.0.0"
-  flutter: ">=1.16.0"
+  flutter: ">=1.17.0"

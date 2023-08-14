@@ -5,6 +5,7 @@ import 'dart:io';
 
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
+import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart';
 import 'package:provider/provider.dart';
@@ -22,7 +23,7 @@ void main() {
 
   runApp(
     ChangeNotifierProvider(
-      create: (context) => FileListModel(),
+      create: (context) => AppModel(),
       child: MyApp(),
     ),
   );
@@ -44,7 +45,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => MyHomePage(
-              title: "古汉语搜索器",
+              title: "汉语历时搜索系统",
             ),
         RouterAddress.fileListPage: (context) => FileListPage(),
       },
@@ -74,17 +75,18 @@ class MyHomePage extends StatefulWidget {
 // home page state
 class _MyHomePageState extends State<MyHomePage> {
   final regController = TextEditingController();
-  final exPathController = TextEditingController();
+  final extralPathController = TextEditingController();
+  final exportPathController = TextEditingController();
 
   var regStr = "";
-  var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets";
-  FileListModel fileListModel = FileListModel();
+  var assetsPath = "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/guwen";
+  AppModel appModel = AppModel();
   var searchProgress = 0;
   var searchProgressText = "";
   var searchTotalFiles = 0;
   var searchStatus = "";
   var searchedTextList = <String>[];
-  var searchResultText = "";
+  var searchResultStaticText = "";
   var totalLineCount = 0;
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
@@ -93,7 +95,8 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void dispose() {
     regController.dispose();
-    exPathController.dispose();
+    extralPathController.dispose();
+    exportPathController.dispose();
     super.dispose();
   }
 
@@ -109,7 +112,7 @@ class _MyHomePageState extends State<MyHomePage> {
     searchedTextList.clear();
 
     // ex path
-    var txtList = filterTextFiles(fileListModel.getAllTxtFile());
+    var txtList = filterTextFiles(appModel.getAllTxtFile());
 
     searchTotalFiles = txtList.length;
     searchProgress = 0;
@@ -125,7 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
           .format(100 * searchProgress / searchTotalFiles);
       searchProgressText =
           "文件读取进度: $searchProgress/$searchTotalFiles   $percent%";
-      searchResultText =
+      searchResultStaticText =
           "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
       updateUI();
     }
@@ -138,25 +141,28 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<int> readFile(String path) async {
     print("read file: $path");
     File file = File(path);
-    var lineIndex = 0;
     Stream<String> lines = file
         .openRead()
         .transform(utf8.decoder) // Decode bytes to UTF-8.
         .transform(LineSplitter()); // Convert stream to individual lines.
     try {
       await for (var line in lines) {
-        // print('$line: ${line.length} characters');
         bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
         // bool isMatch = exp.hasMatch(line);
 
         if (isMatch) {
           // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
-          var fileName = basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
-          var s = "$line —— $fileName";
-          searchedTextList.add(s);
+          var subLines = line.split(RegExp('。|\？'));
+          for (var l in subLines) {
+            var fileName =
+                basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
+            var s = "$l —— $fileName";
+            searchedTextList.add(s);
+            print('line: $l');
+          }
         }
         totalLineCount++;
-        lineIndex++;
+        // print('$line: ${line.length} characters');
       }
       print('File is now closed.');
       // updateUI();
@@ -171,16 +177,41 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
-  
-
   void getReg() {
     regStr = regController.text;
     if (regStr == "") {
       regStr = ".*";
     } else {
-      fileListModel.regStr = regStr;
+      appModel.regStr = regStr;
     }
     exp = RegExp(regStr);
+    var rs = regStr.replaceAll(RegExp('[^\u4e00-\u9fa5]+'), ",");
+    // var hanziList = rs.split(RegExp(',+'));
+    var hanziList = rs.split(',');
+    appModel.highlightWords = hanziList;
+  }
+
+  void exportSearchResult() async {
+    var path = exportPathController.text;
+    if (path.isEmpty) {
+      print('warning: export path is empty');
+      return;
+    }
+    appModel.exportPath = path;
+    var file = File("${path}/${getExportFileName()}.txt");
+    file.create(recursive: true);
+    print('export file $file');
+    for (var line in searchedTextList) {
+      print('write ${line}');
+      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
+    }
+
+    print('export success');
+  }
+
+  String getExportFileName() {
+    return DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
   }
 
   @override
@@ -192,9 +223,9 @@ class _MyHomePageState extends State<MyHomePage> {
   //page build
   @override
   Widget build(BuildContext context) {
-    regController.text =
-        fileListModel.regStr == ".*" ? "" : fileListModel.regStr;
-    exPathController.text = fileListModel.exPath;
+    regController.text = appModel.regStr == ".*" ? "" : appModel.regStr;
+    extralPathController.text = appModel.extralPath;
+    exportPathController.text = appModel.exportPath;
     print("ui build");
     return Scaffold(
       appBar: AppBar(
@@ -208,7 +239,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            // ex path row
+            // 外部路径
             Row(
               children: [
                 Expanded(
@@ -217,9 +248,9 @@ class _MyHomePageState extends State<MyHomePage> {
                       border: OutlineInputBorder(),
                       hintText: '输入外部路径（可选）',
                     ),
-                    controller: exPathController,
+                    controller: extralPathController,
                     onChanged: (value) {
-                      fileListModel.exPath = value;
+                      appModel.extralPath = value;
                       print("onChange $value");
                     },
                   ),
@@ -234,18 +265,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: ElevatedButton(
                     child: const Text('选择内部文件'),
                     onPressed: () {
-                      FileListPage.launch(context, assetsPath);
-                      // Navigator.pushNamed(context, RouterAddress.fileListPage
-                      //     ,
-                      //     arguments: <String, String>{
-                      //       'dirPath': assetsPath,
-                      //     }
-                      //     );
+
                     },
                   ),
                 )
               ],
             ),
+
+            // 正则表达式
             Container(
               height: 8,
             ),
@@ -259,7 +286,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: '请输入搜索正则表达式，如: 先.*后',
                     ),
                     onChanged: (value) {
-                      fileListModel.regStr = value;
+                      appModel.regStr = value;
                       print("onChange $value");
                     },
                     controller: regController,
@@ -277,6 +304,40 @@ class _MyHomePageState extends State<MyHomePage> {
                 // search button
               ],
             ),
+
+            // 导出路径
+            Container(
+              height: 8,
+            ),
+            // regex row
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: '导出路径',
+                    ),
+                    onChanged: (value) {
+                      appModel.regStr = value;
+                      print("onChange $value");
+                    },
+                    controller: exportPathController,
+                  ),
+                ),
+
+                Container(
+                  width: 8,
+                ),
+                SizedBox(
+                  width: 150,
+                  child: ElevatedButton(
+                      onPressed: exportSearchResult, child: const Text('导出')),
+                )
+                // search button
+              ],
+            ),
+
             Container(
               height: 8,
             ),
@@ -286,24 +347,8 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Text(searchProgressText),
                 Text(searchStatus),
-                Text(searchResultText),
-                // SizedBox(
-                //   width: 150,
-                //   child: Text(searchProgressText),
-                // ),
-                // SizedBox(
-                //   width: 150,
-                //   child: Text(searchStatus),
-                // ),
-                // SizedBox(
-                //   width: 200,
-                //   child: Text(searchResultText),
+                Text(searchResultStaticText),
 
-                //   // child: Align(
-                //   //   alignment: Alignment.centerRight,
-                //   //   child: Text("总共找到 ${searchedTextList.length} 条数据"),
-                //   // ),
-                // ),
               ],
             ),
 
@@ -312,15 +357,16 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: updateUI,
-        tooltip: 'Increment',
-        child: const Icon(Icons.search),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+      // floatingActionButton: FloatingActionButton(
+      //   onPressed: updateUI,
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.search),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
 
+// list view
 class DataListView extends StatelessWidget {
   const DataListView({
     super.key,
@@ -331,11 +377,37 @@ class DataListView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print("build text list view1");
+    var highlightTextStyle = TextStyle(
+      // You can set the general style, like a Text()
+      // fontSize: 20.0,
+      color: Colors.red,
+    );
+
+    Map<String, HighlightedWord> hightWords = {
+      "----": HighlightedWord(textStyle: highlightTextStyle)
+    };
+    for (String w in AppModel().highlightWords) {
+      var entry = MapEntry(
+          w,
+          HighlightedWord(
+            onTap: () {
+              print("tap $w");
+            },
+            textStyle: highlightTextStyle,
+          ));
+      hightWords.addEntries([entry]);
+    }
+    print("build text list view2");
     return Expanded(
         child: ListView.builder(
             itemCount: textList.length,
             itemBuilder: (context, index) => Padding(
                 padding: EdgeInsets.all(4),
-                child: Text("${textList[index]}"))));
+                child: TextHighlight(
+                  text: "${textList[index]}",
+                  words: hightWords,
+                ))));
+
   }
 }

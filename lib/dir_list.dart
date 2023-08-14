@@ -48,7 +48,7 @@ class FileListPage extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Dir List'),
+        title: const Text('选择文件'),
       ),
       body: Column(
         children: <Widget>[
@@ -84,11 +84,11 @@ class DirListViewState extends State<StatefulWidget> {
   });
   final List<FileData> fileList;
   // List<String> selectedPathList = <String>[];
-  late FileListModel fileListModel;
+  late AppModel fileListModel;
 
   @override
   Widget build(BuildContext context) {
-    fileListModel = Provider.of<FileListModel>(context, listen: false);
+    fileListModel = Provider.of<AppModel>(context, listen: false);
 
     return ListView.builder(
       itemCount: fileList.length,

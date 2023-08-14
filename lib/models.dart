@@ -25,16 +25,18 @@ List<String> listDir(String path) {
   return subs;
 }
 
-class FileListModel extends ChangeNotifier {
-  static final FileListModel _instance = FileListModel._internal();
-  factory FileListModel() {
+class AppModel extends ChangeNotifier {
+  static final AppModel _instance = AppModel._internal();
+  factory AppModel() {
     return _instance;
   }
-  FileListModel._internal() {}
+  AppModel._internal() {}
 
   final List<String> selectedFiles = <String>[];
   var regStr = "";
-  var exPath = "";
+  var extralPath = "";
+  var exportPath = "";
+  List<String> highlightWords=<String>[];
 
   void add(String path, {bool notify = true}) {
     if (!contains(path)) {
@@ -75,9 +77,9 @@ class FileListModel extends ChangeNotifier {
 
   List<String> getAllTxtFile() {
     var filePathList = <String>[];
-    selectedFiles.forEach((element) => {getAllFiles(element, filePathList)});
+    selectedFiles.forEach((element) => getAllFiles(element, filePathList));
     // 外部文件
-    getAllFiles(exPath, filePathList);
+    getAllFiles(extralPath, filePathList);
     var txtList = filterTextFiles(filePathList);
     return txtList;
   }
