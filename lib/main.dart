@@ -11,7 +11,7 @@ import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
 
-const String TextFilePath = "C:/Dev/语料";
+const String textFilePath = "C:/Dev/语料";
 
 void main() {
   // init app module
@@ -122,8 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
       var endTime = DateTime.now().millisecondsSinceEpoch;
       double timeCost = 1.0 * (endTime - startTime) / 1000;
       searchDurationText = "耗时: $timeCost s";
-      var percent = NumberFormat("###.#", "en_US")
-          .format(100 * searchProgress / searchTotalFiles);
+      // var percent = NumberFormat("###.#", "en_US")
+      //     .format(100 * searchProgress / searchTotalFiles);
       searchProgressText =
           "搜索进度: $searchProgress/$searchTotalFiles";
       searchResultStaticText =
@@ -173,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String getFileDirLocation(String filePath) {
     return filePath
-        .replaceAll(TextFilePath, "")
+        .replaceAll(textFilePath, "")
         .replaceAll(extralPathController.text, "")
         .replaceAll(RegExp("\\d|.txt"), "");
   }
@@ -185,7 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (mContext == null) {
       print('mContext is null');
     } else {
-      ScaffoldMessenger.of(mContext!!).showSnackBar(snackBar);
+      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
     }
   }
 
@@ -235,7 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
     var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     var hws = appModel.highlightWords.join("_");
 
-    var s = timeStr + "_" + hws;
+    var s = "${timeStr}_$hws";
     return s;
   }
 
@@ -295,7 +295,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                   child: const Text('选择搜索范围'),
                   onPressed: () {
-                    FileListPage.launch(context, TextFilePath);
+                    FileListPage.launch(context, textFilePath);
                   },
                 ),
 
