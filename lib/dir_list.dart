@@ -73,7 +73,7 @@ class _FileListPage extends State<FileListPage> {
   }
 
   void addExternalDir(String dirPath) {
-    if (!isDir(dirPath)) {
+    if (!isDir(dirPath) && !isTxt(dirPath)) {
       print("invalid dir path: $dirPath");
       return;
     }
@@ -116,7 +116,7 @@ class _FileListPage extends State<FileListPage> {
                     child: TextField(
                       decoration: const InputDecoration(
                         border: OutlineInputBorder(),
-                        hintText: '语料路经',
+                        hintText: '语料文件路经',
                       ),
                       controller: extralPathController,
                       // onChanged: (value) {
@@ -183,7 +183,7 @@ class _FileListPage extends State<FileListPage> {
         onPressed: () {
           MyHomePage.goHome(context);
         },
-        tooltip: 'confirm',
+        tooltip: '确定',
         child: const Icon(Icons.check),
       ),
     );
