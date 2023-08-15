@@ -17,53 +17,146 @@ class FileListPageArg {
 
 // file list page
 // ignore: must_be_immutable
-class FileListPage extends StatelessWidget {
+class FileListPage extends StatefulWidget {
   // Requiring the list of todos.
-  FileListPage({super.key});
-
-  String dirPath = "";
-  var fileList = <FileData>[];
+  FileListPage({super.key, required this.dirPath});
+  String dirPath;
 
   static void launch(BuildContext context, String path) {
-    Navigator.pushNamed(context, RouterAddress.fileListPage,
-        arguments: FileListPageArg(path));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => FileListPage(dirPath: path),
+      ),
+    );
+  }
+
+  @override
+  State<StatefulWidget> createState() {
+    return _FileListPage(dirPath: dirPath);
+  }
+}
+
+class _FileListPage extends State<FileListPage> {
+  _FileListPage({required this.dirPath});
+  String dirPath = "";
+  var pathList = <String>[];
+  var appModel = AppModel();
+  var extralPathController = TextEditingController();
+
+  void addDir(String dirPath) {
+    listDir(dirPath).forEach((path) {
+      if (!pathList.contains(path)) {
+        if (isDir(path)) {
+          pathList.add(path);
+        } else {
+          if (isTxt(path)) {
+            pathList.add(path);
+          } else {
+            print("not txt: $path");
+          }
+        }
+      }
+    });
+    updateUI();
+  }
+
+  void updateUI() {
+    setState(() {});
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    addDir(dirPath);
   }
 
   @override
   Widget build(BuildContext context) {
-    var arg = ModalRoute.of(context)!.settings.arguments as FileListPageArg;
-    dirPath = arg.path;
-    if (dirPath.isEmpty) {
-      print('error, dirPath not set');
-      // throw Exception('error, dirPath not set');
-    }
-    var subs = <String>[];
-
-    listDir(dirPath).forEach((path) {
-      File file = File(path);
-
-      subs.add(path);
-      var fileData = FileData(basename(path), path,
-          File(path).statSync().type == FileSystemEntityType.file);
-
-      if (file.statSync().type == FileSystemEntityType.file) {
-        if (path.endsWith('.txt') || path.endsWith('.TXT')) {
-          fileList.add(fileData);
-          
-        } else {
-          print('non txt file: $path');
-        }
-      } else {
-        fileList.add(fileData);
-      }
-    });
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('选择文件'),
       ),
-      body: Column(
-        children: <Widget>[Expanded(child: DirListView(fileList: fileList))],
+      body: Padding(
+        padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
+        child: Column(
+          children: [
+            // 追加数据路径
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(),
+                      hintText: '语料路经',
+                    ),
+                    controller: extralPathController,
+                    // onChanged: (value) {
+                    //   appModel.setYuliaoPath(value);
+                    //   print("onChange $value");
+                    // },
+                  ),
+                ),
+
+                Container(
+                  width: 8,
+                ),
+                ElevatedButton(
+                  child: const Text('追加数据'),
+                  onPressed: () {},
+                ),
+                // shaixuan button
+                // SizedBox(
+                //   width: 150,
+                //   child: ElevatedButton(
+                //     child: const Text('添加数据'),
+                //     onPressed: () {},
+                //   ),
+                // )
+              ],
+            ),
+
+            Expanded(
+                child: ListView.builder(
+              itemCount: pathList.length,
+              itemBuilder: (context, index) {
+                var path = pathList[index];
+                var isF = isFile(path);
+                return Row(
+                  children: [
+                    // icon and title
+                    Expanded(
+                        child: ListTile(
+                      leading: Icon(isF ? Icons.text_snippet : Icons.folder),
+                      title: Text(basename(path)),
+                      onTap: () {
+                        if (!isF) {
+                          FileListPage.launch(context, pathList[index]);
+                        }
+                      },
+                    )),
+
+                    Checkbox(
+                      value: appModel.contains(path),
+                      onChanged: (value) {
+                        if (value == true) {
+                          appModel.add(path);
+                        } else {
+                          appModel.remove(path);
+                        }
+                        updateUI();
+                      },
+                    ),
+
+                    Container(
+                      width: 16,
+                    )
+                  ],
+                );
+              },
+            )),
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
@@ -72,66 +165,6 @@ class FileListPage extends StatelessWidget {
         tooltip: 'confirm',
         child: const Icon(Icons.check),
       ),
-    );
-  }
-}
-
-class DirListView extends StatefulWidget {
-  const DirListView({
-    super.key,
-    required this.fileList,
-  });
-
-  final List<FileData> fileList;
-
-  @override
-  // ignore: no_logic_in_create_state
-  State<StatefulWidget> createState() => DirListViewState(fileList: fileList);
-}
-
-class DirListViewState extends State<StatefulWidget> {
-  DirListViewState({
-    required this.fileList,
-  });
-  final List<FileData> fileList;
-  // List<String> selectedPathList = <String>[];
-  late AppModel appModel = AppModel();
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: fileList.length,
-      itemBuilder: (context, index) {
-        var path = fileList[index].path;
-        return Stack(
-          children: [
-            ListTile(
-              leading: Icon(
-                  fileList[index].isFile ? Icons.text_snippet : Icons.folder),
-              title: Text(fileList[index].name),
-              onTap: () {
-                if (!fileList[index].isFile) {
-                  FileListPage.launch(context, fileList[index].path);
-                }
-              },
-            ),
-            Container(
-                alignment: Alignment.centerRight,
-                margin: const EdgeInsets.only(right: 32),
-                child: Checkbox(
-                  value: appModel.contains(fileList[index].path),
-                  onChanged: (value) {
-                    if (value == true) {
-                      appModel.add(path);
-                    } else {
-                      appModel.remove(path);
-                    }
-                    setState(() {});
-                  },
-                ))
-          ],
-        );
-      },
     );
   }
 }

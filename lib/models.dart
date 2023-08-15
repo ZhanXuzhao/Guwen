@@ -3,17 +3,16 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class FileData {
-  final String name;
-  final String path;
-  final bool isFile;
-
-  const FileData(this.name, this.path, this.isFile);
+bool isDir(String path) {
+  return File(path).statSync().type == FileSystemEntityType.directory;
 }
 
-bool isDir(String path) {
-  File file = File(path);
-  return file.statSync().type == FileSystemEntityType.directory;
+bool isFile(String path) {
+  return File(path).statSync().type == FileSystemEntityType.file;
+}
+
+bool isTxt(String path) {
+  return path.endsWith('.txt') || path.endsWith('.TXT');
 }
 
 List<String> listDir(String path) {

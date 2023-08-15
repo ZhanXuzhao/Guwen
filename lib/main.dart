@@ -12,11 +12,8 @@ import 'package:provider/provider.dart';
 import 'dir_list.dart';
 
 const String TextFilePath = "C:/Dev/语料";
-// const String TextFilePath =
-//     "/Users/zhanxuzhao/Dev/FlutterProjects/f05/assets/语料";
 
 void main() {
-
   // init app module
   AppModel();
 
@@ -46,7 +43,7 @@ class MyApp extends StatelessWidget {
         '/': (context) => MyHomePage(
               title: "汉语历时搜索系统",
             ),
-        RouterAddress.fileListPage: (context) => FileListPage(),
+        RouterAddress.fileListPage: (context) => FileListPage(dirPath: ""),
       },
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
@@ -79,15 +76,15 @@ class _MyHomePageState extends State<MyHomePage> {
   final exportPathController = TextEditingController();
 
   var regStr = "";
-  var assetsPath = TextFilePath;
+  // var assetsPath = TextFilePath;
   AppModel appModel = AppModel();
-  var searchProgress = 0;
-  var searchProgressText = "";
-  var searchTotalFiles = 0;
-  var searchStatus = "";
   var searchedTextList = <String>[];
-  var searchResultStaticText = "";
+  var searchProgress = 0;
+  var searchTotalFiles = 0;
   var totalLineCount = 0;
+  var searchProgressText = "";
+  var searchResultStaticText = "";
+  var searchDurationText = "";
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
@@ -102,11 +99,12 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<void> searchData() async {
     var hasReg = getReg();
-    if(!hasReg){
+    if (!hasReg) {
+      showMessage("请输入搜索条件");
       return;
     }
     var startTime = DateTime.now().millisecondsSinceEpoch;
-    searchStatus = "";
+    searchDurationText = "";
     searchedTextList.clear();
 
     // ex path
@@ -123,11 +121,11 @@ class _MyHomePageState extends State<MyHomePage> {
       // cal time cost
       var endTime = DateTime.now().millisecondsSinceEpoch;
       double timeCost = 1.0 * (endTime - startTime) / 1000;
-      searchStatus = "耗时: $timeCost s";
+      searchDurationText = "耗时: $timeCost s";
       var percent = NumberFormat("###.#", "en_US")
           .format(100 * searchProgress / searchTotalFiles);
       searchProgressText =
-          "文件读取进度: $searchProgress/$searchTotalFiles   $percent%";
+          "搜索进度: $searchProgress/$searchTotalFiles";
       searchResultStaticText =
           "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
       updateUI();
@@ -136,7 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
     print(
         "search finished  $searchTotalFiles files get $searchProgress sentence");
     updateUI();
-    showMessage("查询完成");
+    showMessage("搜索完成");
   }
 
   Future<String> readFile(String path) async {
@@ -175,7 +173,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String getFileDirLocation(String filePath) {
     return filePath
-        .replaceAll(assetsPath, "")
+        .replaceAll(TextFilePath, "")
         .replaceAll(extralPathController.text, "")
         .replaceAll(RegExp("\\d|.txt"), "");
   }
@@ -184,12 +182,11 @@ class _MyHomePageState extends State<MyHomePage> {
     var snackBar = SnackBar(
       content: Text(msg),
     );
-    if(mContext==null){
+    if (mContext == null) {
       print('mContext is null');
     } else {
       ScaffoldMessenger.of(mContext!!).showSnackBar(snackBar);
     }
-    
   }
 
   void updateUI() {
@@ -237,7 +234,7 @@ class _MyHomePageState extends State<MyHomePage> {
   String getExportFileName() {
     var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     var hws = appModel.highlightWords.join("_");
-    
+
     var s = timeStr + "_" + hws;
     return s;
   }
@@ -251,7 +248,7 @@ class _MyHomePageState extends State<MyHomePage> {
     extralPathController.text = appModel.getYuliaoPath();
     exportPathController.text = appModel.getExportPathStr();
 
-    searchData();
+    // searchData();
   }
 
   //page build
@@ -272,39 +269,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           children: <Widget>[
-            // 外部路径
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '输入语料路经',
-                    ),
-                    controller: extralPathController,
-                    onChanged: (value) {
-                      appModel.setYuliaoPath(value);
-                      print("onChange $value");
-                    },
-                  ),
-                ),
-
-                Container(
-                  width: 8,
-                ),
-                // shaixuan button
-                SizedBox(
-                  width: 150,
-                  child: ElevatedButton(
-                    child: const Text('选择搜索范围'),
-                    onPressed: () {
-                      FileListPage.launch(context, assetsPath);
-                    },
-                  ),
-                )
-              ],
-            ),
-
             // 正则表达式
             Container(
               height: 8,
@@ -325,6 +289,15 @@ class _MyHomePageState extends State<MyHomePage> {
                     controller: regController,
                   ),
                 ),
+                Container(
+                  width: 8,
+                ),
+                ElevatedButton(
+                  child: const Text('选择搜索范围'),
+                  onPressed: () {
+                    FileListPage.launch(context, TextFilePath);
+                  },
+                ),
 
                 Container(
                   width: 8,
@@ -338,48 +311,80 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
 
-            // 导出路径
-            Container(
-              height: 8,
-            ),
-            // regex row
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '输入导出路径',
-                    ),
-                    onChanged: (value) {
-                      appModel.setExportPath(value);
-                      print("onChange $value");
-                    },
-                    controller: exportPathController,
-                  ),
-                ),
+            // // 外部路径
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: TextField(
+            //         decoration: InputDecoration(
+            //           border: OutlineInputBorder(),
+            //           hintText: '输入语料路经',
+            //         ),
+            //         controller: extralPathController,
+            //         onChanged: (value) {
+            //           appModel.setYuliaoPath(value);
+            //           print("onChange $value");
+            //         },
+            //       ),
+            //     ),
 
-                Container(
-                  width: 8,
-                ),
-                SizedBox(
-                  width: 150,
-                  child: ElevatedButton(
-                      onPressed: exportSearchResult, child: const Text('导出')),
-                )
-                // search button
-              ],
-            ),
+            //     Container(
+            //       width: 8,
+            //     ),
+            //     // shaixuan button
+            //     SizedBox(
+            //       width: 150,
+            //       child: ElevatedButton(
+            //         child: const Text('选择搜索范围'),
+            //         onPressed: () {
+            //           FileListPage.launch(context, assetsPath);
+            //         },
+            //       ),
+            //     )
+            //   ],
+            // ),
 
-            Container(
-              height: 8,
-            ),
+            // // 导出路径
+            // Container(
+            //   height: 8,
+            // ),
+            // // regex row
+            // Row(
+            //   children: [
+            //     Expanded(
+            //       child: TextField(
+            //         decoration: InputDecoration(
+            //           border: OutlineInputBorder(),
+            //           hintText: '输入导出路径',
+            //         ),
+            //         onChanged: (value) {
+            //           appModel.setExportPath(value);
+            //           print("onChange $value");
+            //         },
+            //         controller: exportPathController,
+            //       ),
+            //     ),
+
+            //     Container(
+            //       width: 8,
+            //     ),
+            //     ElevatedButton(
+            //         onPressed: exportSearchResult, child: const Text('导出')),
+            //     // search button
+            //   ],
+            // ),
+
+
             // seach info row
+            Container(
+              height: 8,
+            ),
+           
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
                 Text(searchProgressText),
-                Text(searchStatus),
+                Text(searchDurationText),
                 Text(searchResultStaticText),
               ],
             ),
@@ -389,11 +394,11 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: updateUI,
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.search),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
+      floatingActionButton: FloatingActionButton(
+        onPressed: updateUI,
+        tooltip: 'Increment',
+        child: const Icon(Icons.download),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
