@@ -19,14 +19,18 @@ class FileListPageArg {
 // ignore: must_be_immutable
 class FileListPage extends StatefulWidget {
   // Requiring the list of todos.
-  FileListPage({super.key, required this.dirPath});
+  FileListPage(
+      {super.key, required this.dirPath, this.showAddMoreWidget = false});
   String dirPath;
+  bool showAddMoreWidget = false;
 
-  static void launch(BuildContext context, String path) {
+  static void launch(
+      BuildContext context, String path, bool showAddMoreWidget) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => FileListPage(dirPath: path),
+        builder: (context) =>
+            FileListPage(dirPath: path, showAddMoreWidget: showAddMoreWidget),
       ),
     );
   }
@@ -34,18 +38,24 @@ class FileListPage extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
     // ignore: no_logic_in_create_state
-    return _FileListPage(dirPath: dirPath);
+    return _FileListPage(
+        dirPath: dirPath, showAddMoreWidget: showAddMoreWidget);
   }
 }
 
 class _FileListPage extends State<FileListPage> {
-  _FileListPage({required this.dirPath});
+  _FileListPage({required this.dirPath, this.showAddMoreWidget = false});
+  bool showAddMoreWidget = false;
   String dirPath = "";
   var pathList = <String>[];
   var appModel = AppModel();
   var extralPathController = TextEditingController();
 
-  void addDir(String dirPath) {
+  void addDirContent(String dirPath) {
+    if (!isDir(dirPath)) {
+      print("invalid dir path: $dirPath");
+      return;
+    }
     listDir(dirPath).forEach((path) {
       if (!pathList.contains(path)) {
         if (isDir(path)) {
@@ -62,6 +72,16 @@ class _FileListPage extends State<FileListPage> {
     updateUI();
   }
 
+  void addExternalDir(String dirPath) {
+    if (!isDir(dirPath)) {
+      print("invalid dir path: $dirPath");
+      return;
+    }
+    appModel.addExternalDir(dirPath);
+    pathList.add(dirPath);
+    updateUI();
+  }
+
   void updateUI() {
     setState(() {});
   }
@@ -69,7 +89,13 @@ class _FileListPage extends State<FileListPage> {
   @override
   void initState() {
     super.initState();
-    addDir(dirPath);
+
+    addDirContent(dirPath);
+    if (showAddMoreWidget) {
+      for (var path in appModel.externalDirs) {
+        addExternalDir(path);
+      }
+    }
   }
 
   @override
@@ -83,39 +109,33 @@ class _FileListPage extends State<FileListPage> {
         child: Column(
           children: [
             // 追加数据路径
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '语料路经',
+            if (showAddMoreWidget)
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: const InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: '语料路经',
+                      ),
+                      controller: extralPathController,
+                      // onChanged: (value) {
+                      //   appModel.setYuliaoPath(value);
+                      //   print("onChange $value");
+                      // },
                     ),
-                    controller: extralPathController,
-                    // onChanged: (value) {
-                    //   appModel.setYuliaoPath(value);
-                    //   print("onChange $value");
-                    // },
                   ),
-                ),
-
-                Container(
-                  width: 8,
-                ),
-                ElevatedButton(
-                  child: const Text('追加数据'),
-                  onPressed: () {},
-                ),
-                // shaixuan button
-                // SizedBox(
-                //   width: 150,
-                //   child: ElevatedButton(
-                //     child: const Text('添加数据'),
-                //     onPressed: () {},
-                //   ),
-                // )
-              ],
-            ),
+                  Container(
+                    width: 8,
+                  ),
+                  ElevatedButton(
+                    child: const Text('追加数据'),
+                    onPressed: () {
+                      addExternalDir(extralPathController.text);
+                    },
+                  ),
+                ],
+              ),
 
             Expanded(
                 child: ListView.builder(
@@ -132,7 +152,7 @@ class _FileListPage extends State<FileListPage> {
                       title: Text(basename(path)),
                       onTap: () {
                         if (!isF) {
-                          FileListPage.launch(context, pathList[index]);
+                          FileListPage.launch(context, pathList[index], false);
                         }
                       },
                     )),

@@ -1,5 +1,7 @@
+import 'dart:collection';
 import 'dart:io';
 
+import 'package:f05/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -25,6 +27,8 @@ List<String> listDir(String path) {
   return subs;
 }
 
+const String textFilePath = "C:/Dev/语料";
+
 class AppModel extends ChangeNotifier {
   static final AppModel _instance = AppModel._internal();
   factory AppModel() {
@@ -32,12 +36,8 @@ class AppModel extends ChangeNotifier {
   }
 
   AppModel._internal() {
+    // addRootDir(textFilePath);
     initSp(); // async
-  }
-
-  Future<bool> initSp() async {
-    sp = await SharedPreferences.getInstance();
-    return true;
   }
 
   late SharedPreferences sp;
@@ -46,6 +46,20 @@ class AppModel extends ChangeNotifier {
   var yuliaoPath = "";
   var exportPath = "";
   List<String> highlightWords = <String>[];
+  LinkedHashSet<String> externalDirs = LinkedHashSet();
+
+  Future<bool> initSp() async {
+    sp = await SharedPreferences.getInstance();
+    return true;
+  }
+
+  void addExternalDir(String path) {
+    externalDirs.add(path);
+  }
+
+  void removeExternalDir(String path) {
+    externalDirs.remove(path);
+  }
 
   void setRegStr(String s) {
     regStr = s;

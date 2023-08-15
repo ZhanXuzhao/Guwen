@@ -7,11 +7,10 @@ import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
-
-const String textFilePath = "C:/Dev/语料";
 
 void main() {
   // init app module
@@ -124,8 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
       searchDurationText = "耗时: $timeCost s";
       // var percent = NumberFormat("###.#", "en_US")
       //     .format(100 * searchProgress / searchTotalFiles);
-      searchProgressText =
-          "搜索进度: $searchProgress/$searchTotalFiles";
+      searchProgressText = "搜索进度: $searchProgress/$searchTotalFiles";
       searchResultStaticText =
           "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
       updateUI();
@@ -172,10 +170,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   String getFileDirLocation(String filePath) {
-    return filePath
-        .replaceAll(textFilePath, "")
-        .replaceAll(extralPathController.text, "")
-        .replaceAll(RegExp("\\d|.txt"), "");
+    for (var rootPath in appModel.externalDirs) {
+      filePath = filePath.replaceAll(rootPath, "");
+    }
+    return filePath.replaceAll(RegExp("\\d|.txt"), "");
   }
 
   void showMessage(String msg) {
@@ -212,11 +210,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void exportSearchResult() async {
-    var path = exportPathController.text;
-    if (path.isEmpty) {
-      showMessage("请指定导出路径");
-      return;
+    var dp = (await getApplicationDocumentsDirectory()).path;
+    var path = '$dp\\古汉语搜索结果';
+    var dir = Directory(path);
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
     }
+
     // appModel.setExportPath(path);
     var file = File("$path/${getExportFileName()}.txt");
     file.create(recursive: true);
@@ -228,7 +228,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     print('export success');
-    showMessage("导出成功");
+    showMessage("导出成功 $path");
   }
 
   String getExportFileName() {
@@ -295,91 +295,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 ElevatedButton(
                   child: const Text('选择搜索范围'),
                   onPressed: () {
-                    FileListPage.launch(context, textFilePath);
+                    FileListPage.launch(context, textFilePath, true);
                   },
                 ),
-
-                Container(
+                                Container(
                   width: 8,
                 ),
-                SizedBox(
-                  width: 150,
-                  child: ElevatedButton(
-                      onPressed: searchData, child: const Text('搜索')),
-                )
+                ElevatedButton(onPressed: searchData, child: const Text('搜索')),
+
                 // search button
               ],
             ),
-
-            // // 外部路径
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: TextField(
-            //         decoration: InputDecoration(
-            //           border: OutlineInputBorder(),
-            //           hintText: '输入语料路经',
-            //         ),
-            //         controller: extralPathController,
-            //         onChanged: (value) {
-            //           appModel.setYuliaoPath(value);
-            //           print("onChange $value");
-            //         },
-            //       ),
-            //     ),
-
-            //     Container(
-            //       width: 8,
-            //     ),
-            //     // shaixuan button
-            //     SizedBox(
-            //       width: 150,
-            //       child: ElevatedButton(
-            //         child: const Text('选择搜索范围'),
-            //         onPressed: () {
-            //           FileListPage.launch(context, assetsPath);
-            //         },
-            //       ),
-            //     )
-            //   ],
-            // ),
-
-            // // 导出路径
-            // Container(
-            //   height: 8,
-            // ),
-            // // regex row
-            // Row(
-            //   children: [
-            //     Expanded(
-            //       child: TextField(
-            //         decoration: InputDecoration(
-            //           border: OutlineInputBorder(),
-            //           hintText: '输入导出路径',
-            //         ),
-            //         onChanged: (value) {
-            //           appModel.setExportPath(value);
-            //           print("onChange $value");
-            //         },
-            //         controller: exportPathController,
-            //       ),
-            //     ),
-
-            //     Container(
-            //       width: 8,
-            //     ),
-            //     ElevatedButton(
-            //         onPressed: exportSearchResult, child: const Text('导出')),
-            //     // search button
-            //   ],
-            // ),
-
 
             // seach info row
             Container(
               height: 8,
             ),
-           
+
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
@@ -395,7 +327,7 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: updateUI,
+        onPressed: exportSearchResult,
         tooltip: 'Increment',
         child: const Icon(Icons.download),
       ), // This trailing comma makes auto-formatting nicer for build methods.
