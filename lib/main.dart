@@ -40,7 +40,7 @@ class MyApp extends StatelessWidget {
       initialRoute: '/',
       routes: {
         '/': (context) => MyHomePage(
-              title: "汉语历时搜索系统",
+              title: "汉语溯源",
             ),
         RouterAddress.fileListPage: (context) => FileListPage(dirPath: ""),
       },
@@ -86,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var searchProgressText = "";
   var searchResultStaticText = "";
   var searchDurationText = "";
-  var exampleSearchText = ['天地', '之.者', '之.*者', '之.{1,4}者'];
+  var exampleSearchText = ['之', '之.者', '之.*者', '之.{1,4}者'];
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
@@ -259,6 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
       regController.text = rs == ".*" ? "" : rs;
       extralPathController.text = appModel.getYuliaoPath();
       exportPathController.text = appModel.getExportPathStr();
+      appModel.setYuliaoType(0);
     });
     // searchData();
   }
@@ -283,6 +284,7 @@ class _MyHomePageState extends State<MyHomePage> {
         padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             // 正则表达式
             Container(
@@ -327,8 +329,9 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
 
             // search tabs 现代汉语、近代汉语、古汉语、指定文献
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            Wrap(
+              spacing: 8,
+              alignment: WrapAlignment.start,
               children: List<Widget>.generate(
                 searchTabs.length,
                 (int index) {
@@ -340,6 +343,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         curSearchTab = selected ? index : curSearchTab;
                         if (curSearchTab == searchTabs.length - 1) {
                           FileListPage.launch(context, textFilePath, true);
+                        } else {
+                          appModel.setYuliaoType(index);
                         }
                       });
                     },
@@ -358,12 +363,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("搜索说明：", style: TextStyle(color: Colors.red),),
+                  Text(
+                    "搜索说明：",
+                    style: TextStyle(color: Colors.red),
+                  ),
                   Text("a..b 匹配a、b间有2个任意字符;"
                       "\na.*b 匹配a、b间有任意个字符;"
                       "\na.{m,n}b 匹配a、b间有m-n个字符;"
                       "\n更多搜索语法可以百度正则表达式进行了解;"),
-                  Text("示例（可点击）：", style: TextStyle(color: Colors.red),),
+                  Text(
+                    "示例（可点击）：",
+                    style: TextStyle(color: Colors.red),
+                  ),
                   Container(
                     height: 8,
                   ),

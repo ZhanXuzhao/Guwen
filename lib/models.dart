@@ -1,7 +1,6 @@
 import 'dart:collection';
 import 'dart:io';
 
-import 'package:f05/main.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -27,7 +26,7 @@ List<String> listDir(String path) {
   return subs;
 }
 
-const String textFilePath = "C:/Dev/语料";
+const String textFilePath = "D:\\Projects\\GHY\\语料\\01先秦";
 
 class AppModel extends ChangeNotifier {
   static final AppModel _instance = AppModel._internal();
@@ -44,6 +43,7 @@ class AppModel extends ChangeNotifier {
   final List<String> selectedFiles = <String>[];
   var regStr = "";
   var yuliaoPath = "";
+  var innerYuliaoPath = 'D:\\Projects\\GHY\\语料\\01先秦'; // 内置预料
   var exportPath = "";
   List<String> highlightWords = <String>[];
   LinkedHashSet<String> externalDirs = LinkedHashSet();
@@ -76,6 +76,14 @@ class AppModel extends ChangeNotifier {
   void setYuliaoPath(String s) {
     yuliaoPath = s;
     sp.setString("YuliaoPath", s);
+  }
+
+  // 设置语料类型
+  void setYuliaoType(int type){
+    var dir = listDir(innerYuliaoPath)[type];
+    print("set yuliao type: $type $dir");
+    selectedFiles.clear();
+    selectedFiles.add(dir);
   }
 
   String getYuliaoPath() {
@@ -157,5 +165,5 @@ void getAllFiles(String path, List<String> list) {
 }
 
 List<String> filterTextFiles(List<String> list) {
-  return list.where((element) => element.endsWith('.txt')).toList();
+  return list.where((element) => element.endsWith('.txt') || element.endsWith('.TXT')).toList();
 }
