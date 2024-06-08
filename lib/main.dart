@@ -3,7 +3,6 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:chinese_font_library/chinese_font_library.dart';
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
@@ -276,8 +275,10 @@ class _MyHomePageState extends State<MyHomePage> {
     print("ui build");
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
+        backgroundColor: Theme.of(context).primaryColor,
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 32,
+            fontFamily: "楷体"),
         automaticallyImplyLeading: false,
       ),
       // homepage body
@@ -366,7 +367,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: [
                   Text(
                     "搜索说明：",
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: Theme.of(context).primaryColor),
                   ),
                   Text("a..b 匹配a、b间有2个任意字符;"
                       "\na.*b 匹配a、b间有任意个字符;"
@@ -374,7 +375,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       "\n更多搜索语法可以百度正则表达式进行了解;"),
                   Text(
                     "示例（可点击）：",
-                    style: TextStyle(color: Colors.red),
+                    style: TextStyle(color: Theme.of(context).primaryColor),
                   ),
                   Container(
                     height: 8,
