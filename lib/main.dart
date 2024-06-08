@@ -30,7 +30,6 @@ class RouterAddress {
   static const String fileListPage = '/fileListPage';
 }
 
-
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
@@ -77,6 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final exportPathController = TextEditingController();
 
   var regStr = "";
+
   // var assetsPath = TextFilePath;
   AppModel appModel = AppModel();
   var searchedTextList = <String>[];
@@ -244,7 +244,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    appModel.initSp().then((onValue){
+    appModel.initSp().then((onValue) {
       var rs = appModel.getRegStr();
       regController.text = rs == ".*" ? "" : rs;
       extralPathController.text = appModel.getYuliaoPath();
@@ -252,6 +252,9 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     // searchData();
   }
+
+  int? curSearchTab = 0;
+  var searchTabs = ["现代汉语", "近代汉语", "古汉语", "指定文献"];
 
   //page build
   @override
@@ -291,16 +294,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     controller: regController,
                   ),
                 ),
+                // Container(
+                //   width: 8,
+                // ),
+                // ElevatedButton(
+                //   child: const Text('选择搜索范围'),
+                //   onPressed: () {
+                //     FileListPage.launch(context, textFilePath, true);
+                //   },
+                // ),
                 Container(
-                  width: 8,
-                ),
-                ElevatedButton(
-                  child: const Text('选择搜索范围'),
-                  onPressed: () {
-                    FileListPage.launch(context, textFilePath, true);
-                  },
-                ),
-                                Container(
                   width: 8,
                 ),
                 ElevatedButton(onPressed: searchData, child: const Text('搜索')),
@@ -309,11 +312,37 @@ class _MyHomePageState extends State<MyHomePage> {
               ],
             ),
 
-            // seach info row
             Container(
               height: 8,
             ),
 
+            // search tabs 现代汉语、近代汉语、古汉语、指定文献
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: List<Widget>.generate(
+                searchTabs.length,
+                (int index) {
+                  return ChoiceChip(
+                    label: Text(searchTabs[index]),
+                    selected: curSearchTab == index,
+                    onSelected: (bool selected) {
+                      setState(() {
+                        curSearchTab = selected ? index : curSearchTab;
+                        if (curSearchTab == searchTabs.length-1) {
+                          FileListPage.launch(context, textFilePath, true);
+                        }
+                      });
+                    },
+                  );
+                },
+              ).toList(),
+            ),
+
+            Container(
+              height: 8,
+            ),
+
+            // search progress row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
