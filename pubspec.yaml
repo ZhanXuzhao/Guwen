@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.2.0
   path_provider: ^2.1.0
   msix: ^3.16.1
+  chinese_font_library: ^1.2.0
   
 dev_dependencies:
   flutter_test:
