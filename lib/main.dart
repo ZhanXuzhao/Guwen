@@ -9,7 +9,6 @@ import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dir_list.dart';
 
@@ -83,9 +82,11 @@ class _MyHomePageState extends State<MyHomePage> {
   var searchProgress = 0;
   var searchTotalFiles = 0;
   var totalLineCount = 0;
+  bool showProgressUI = false;
   var searchProgressText = "";
   var searchResultStaticText = "";
   var searchDurationText = "";
+  var exampleSearchText = ['天地', '之.者', '之.*者', '之.{1,4}者'];
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
@@ -101,12 +102,14 @@ class _MyHomePageState extends State<MyHomePage> {
   Future<void> searchData() async {
     var hasReg = getReg();
     if (!hasReg) {
+      clearPreSearchData();
+      showProgressUI = false;
+      updateUI();
       showMessage("请输入搜索条件");
       return;
     }
     var startTime = DateTime.now().millisecondsSinceEpoch;
-    searchDurationText = "";
-    searchedTextList.clear();
+    clearPreSearchData();
 
     // ex path
     var txtList = filterTextFiles(appModel.getAllTxtFile());
@@ -119,7 +122,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
       searchProgress++;
 
-      // cal time cost
+      // 搜索进度 cal time cost
+      showProgressUI = true;
       var endTime = DateTime.now().millisecondsSinceEpoch;
       double timeCost = 1.0 * (endTime - startTime) / 1000;
       searchDurationText = "耗时: $timeCost s";
@@ -128,6 +132,7 @@ class _MyHomePageState extends State<MyHomePage> {
       searchProgressText = "搜索进度: $searchProgress/$searchTotalFiles";
       searchResultStaticText =
           "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
+
       updateUI();
     }
 
@@ -135,6 +140,11 @@ class _MyHomePageState extends State<MyHomePage> {
         "search finished  $searchTotalFiles files get $searchProgress sentence");
     updateUI();
     showMessage("搜索完成");
+  }
+
+  void clearPreSearchData() {
+    searchDurationText = "";
+    searchedTextList.clear();
   }
 
   Future<String> readFile(String path) async {
@@ -328,7 +338,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     onSelected: (bool selected) {
                       setState(() {
                         curSearchTab = selected ? index : curSearchTab;
-                        if (curSearchTab == searchTabs.length-1) {
+                        if (curSearchTab == searchTabs.length - 1) {
                           FileListPage.launch(context, textFilePath, true);
                         }
                       });
@@ -342,17 +352,50 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 8,
             ),
 
-            // search progress row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(searchProgressText),
-                Text(searchDurationText),
-                Text(searchResultStaticText),
-              ],
-            ),
+            // example 示例
+            if (!showProgressUI)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text("搜索说明：", style: TextStyle(color: Colors.red),),
+                  Text("a..b 匹配a、b间有2个任意字符;"
+                      "\na.*b 匹配a、b间有任意个字符;"
+                      "\na.{m,n}b 匹配a、b间有m-n个字符;"
+                      "\n更多搜索语法可以百度正则表达式进行了解;"),
+                  Text("示例（可点击）：", style: TextStyle(color: Colors.red),),
+                  Container(
+                    height: 8,
+                  ),
+                  Wrap(
+                    spacing: 8.0, // gap between adjacent chips
+                    runSpacing: 4.0, // gap between lines
+                    children: List<Widget>.generate(exampleSearchText.length,
+                        (int index) {
+                      // return Text(exampleSearchText[index]);
+                      return ActionChip(
+                        label: Text("${exampleSearchText[index]}"),
+                        onPressed: () {
+                          regController.text = exampleSearchText[index];
+                        },
+                      );
+                    }),
+                  )
+                ],
+              ),
 
-            // date list
+            // search progress row
+            if (showProgressUI)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  Text(searchProgressText),
+                  Text(searchDurationText),
+                  Text(searchResultStaticText),
+                ],
+              ),
+
+            // 搜索结果 date list
             DataListView(textList: searchedTextList),
           ],
         ),
