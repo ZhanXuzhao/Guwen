@@ -9,6 +9,7 @@ import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'dir_list.dart';
 
@@ -242,12 +243,12 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-
-    var rs = appModel.getRegStr();
-    regController.text = rs == ".*" ? "" : rs;
-    extralPathController.text = appModel.getYuliaoPath();
-    exportPathController.text = appModel.getExportPathStr();
-
+    appModel.initSp().then((onValue){
+      var rs = appModel.getRegStr();
+      regController.text = rs == ".*" ? "" : rs;
+      extralPathController.text = appModel.getYuliaoPath();
+      exportPathController.text = appModel.getExportPathStr();
+    });
     // searchData();
   }
 
