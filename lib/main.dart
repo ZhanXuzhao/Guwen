@@ -36,13 +36,6 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    // https://pub.dev/packages/chinese_font_library/example
-    final customFontFamily = "CustomFont100";
-    DynamicFont.url(
-      fontFamily: customFontFamily,
-      url:
-      'https://raw.githubusercontent.com/LastMonopoly/chinese_font_library/master/example/assets/SmileySans-Oblique.ttf',
-    ).load();
     return MaterialApp(
       title: 'App Title',
       initialRoute: '/',
@@ -53,11 +46,10 @@ class MyApp extends StatelessWidget {
         RouterAddress.fileListPage: (context) => FileListPage(dirPath: ""),
       },
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.brown),
         useMaterial3: true,
-        fontFamily: customFontFamily,
+        fontFamily: Platform.isWindows ? "微软雅黑" : null,
       ),
-      // home: const MyHomePage(title: '古汉语搜索器'),
     );
   }
 }
