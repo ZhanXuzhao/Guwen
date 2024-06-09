@@ -387,7 +387,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         (int index) {
                       // return Text(exampleSearchText[index]);
                       return ActionChip(
-                        label: Text("${exampleSearchText[index]}"),
+                        label: Text(exampleSearchText[index]),
                         onPressed: () {
                           regController.text = exampleSearchText[index];
                         },
