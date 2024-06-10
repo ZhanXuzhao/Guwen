@@ -100,7 +100,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> searchData() async {
-    var hasReg = getReg();
+    var hasReg = processSearchReg();
     if (!hasReg) {
       clearPreSearchData();
       showProgressUI = false;
@@ -204,8 +204,9 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {});
   }
 
-  bool getReg() {
+  bool processSearchReg() {
     regStr = regController.text;
+    appModel.setRegStr(regStr);
     if (regStr == "") {
       // regStr = ".*";
       print('no search regex');
@@ -308,7 +309,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       hintText: '输入搜索正则表达式，如: 之.*者',
                     ),
                     onChanged: (value) {
-                      appModel.setRegStr(value);
+                      // appModel.setRegStr(value);
                       print("onChange $value");
                     },
                     controller: regController,
