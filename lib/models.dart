@@ -26,10 +26,12 @@ List<String> listDir(String path) {
   return subs;
 }
 
-const String textFilePath = "D:\\Projects\\GHY\\语料\\01先秦";
+const String textFilePath = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
+var innerYuliaoPath = 'D:/Projects/GHY/汉语语例溯源系统库'; // 内置预料目录列表
 
 class AppModel extends ChangeNotifier {
   static final AppModel _instance = AppModel._internal();
+
   factory AppModel() {
     return _instance;
   }
@@ -43,7 +45,7 @@ class AppModel extends ChangeNotifier {
   final List<String> selectedFiles = <String>[];
   var regStr = "";
   var yuliaoPath = "";
-  var innerYuliaoPath = 'D:\\Projects\\GHY\\语料\\01先秦'; // 内置预料
+  var curYuliaoType = 0;
   var exportPath = "";
   List<String> highlightWords = <String>[];
   LinkedHashSet<String> externalDirs = LinkedHashSet();
@@ -78,12 +80,22 @@ class AppModel extends ChangeNotifier {
     sp.setString("YuliaoPath", s);
   }
 
+  void initYuliaoType() {
+    if (selectedFiles.isEmpty) {
+      setYuliaoType(0);
+    }
+  }
+
   // 设置语料类型
-  void setYuliaoType(int type){
-    var dir = listDir(innerYuliaoPath)[type];
-    print("set yuliao type: $type $dir");
+  void setYuliaoType(int type) {
+    print("set yuliao type: $type");
+    curYuliaoType = type;
     selectedFiles.clear();
-    selectedFiles.add(dir);
+    var fileList = listDir(innerYuliaoPath);
+    if (type < fileList.length - 1) {
+      var dir = fileList[type];
+      selectedFiles.add(dir);
+    }
   }
 
   String getYuliaoPath() {
@@ -105,6 +117,9 @@ class AppModel extends ChangeNotifier {
     return exportPath;
   }
 
+  /**
+   * 增加选中的文件或目录
+   */
   void add(String path, {bool notify = true}) {
     if (!contains(path)) {
       selectedFiles.add(path);
@@ -119,6 +134,9 @@ class AppModel extends ChangeNotifier {
     // notifyListeners();
   }
 
+  /**
+   * 移除选中的文件或目录
+   */
   void remove(String path, {bool notify = true}) {
     selectedFiles.remove(path);
     if (isDir(path)) {
@@ -165,5 +183,7 @@ void getAllFiles(String path, List<String> list) {
 }
 
 List<String> filterTextFiles(List<String> list) {
-  return list.where((element) => element.endsWith('.txt') || element.endsWith('.TXT')).toList();
+  return list
+      .where((element) => element.endsWith('.txt') || element.endsWith('.TXT'))
+      .toList();
 }

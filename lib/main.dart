@@ -254,18 +254,24 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
+    print('main init state');
+    print('curSearchTab: $curSearchTab');
+    curSearchTab=appModel.curYuliaoType;
+    print('curSearchTab update: $curSearchTab');
+
     appModel.initSp().then((onValue) {
       var rs = appModel.getRegStr();
       regController.text = rs == ".*" ? "" : rs;
       extralPathController.text = appModel.getYuliaoPath();
       exportPathController.text = appModel.getExportPathStr();
-      appModel.setYuliaoType(0);
+      appModel.initYuliaoType();
     });
     // searchData();
   }
 
   int? curSearchTab = 0;
-  var searchTabs = ["现代汉语", "近代汉语", "古汉语", "指定文献"];
+  // var searchTabs = ["现代汉语", "近代汉语", "古汉语", "指定文献"];
+  var searchTabs = ["古代汉语", "近代报刊", "现代汉语","外部文献", "指定文献"];
 
   //page build
   @override
@@ -344,10 +350,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     onSelected: (bool selected) {
                       setState(() {
                         curSearchTab = selected ? index : curSearchTab;
+                        appModel.setYuliaoType(index);
                         if (curSearchTab == searchTabs.length - 1) {
                           FileListPage.launch(context, textFilePath, true);
-                        } else {
-                          appModel.setYuliaoType(index);
                         }
                       });
                     },
