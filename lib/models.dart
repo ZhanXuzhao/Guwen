@@ -1,8 +1,12 @@
 import 'dart:collection';
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:leancloud_storage/leancloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'beans.dart';
 
 bool isDir(String path) {
   return File(path).statSync().type == FileSystemEntityType.directory;
@@ -38,7 +42,7 @@ class AppModel extends ChangeNotifier {
 
   AppModel._internal() {
     // addRootDir(textFilePath);
-    initSp(); // async
+    // initSp(); // async
   }
 
   late SharedPreferences sp;
@@ -50,9 +54,50 @@ class AppModel extends ChangeNotifier {
   List<String> highlightWords = <String>[];
   LinkedHashSet<String> externalDirs = LinkedHashSet();
 
-  Future<bool> initSp() async {
+  //student
+  int? userType = 0; //0 undefine, 1 student, 2 teacher
+  late User user;
+  Student? student;
+  Teacher? teacher;
+
+  Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
+    initUser();
+
     return true;
+  }
+
+  Future<void> initUser() async {
+    userType = sp.getInt("user_type") ?? 0;
+    if (userType == 0) {
+      user = User();
+      await user.save();
+      setUserId(user.objectId);
+      log("user $user");
+      return;
+    }
+    var userId = getUserId();
+    user = (await LCQuery("User").whereEqualTo("objectId", userId).first())
+        as User;
+    if (userType == 1) {
+      student = (await LCQuery("Student")
+          .whereEqualTo("id", user.student.id)
+          .first()) as Student?;
+    } else {
+      teacher = (await LCQuery("Student").whereEqualTo("id", user.teacher.id))
+          as Teacher?;
+    }
+    log("init user $user");
+
+    // user.toJson();
+  }
+
+  String getUserId() {
+    return sp.getString("userId") ?? "";
+  }
+
+  void setUserId(String? id) {
+    sp.setString("userId", id ?? "");
   }
 
   void addExternalDir(String path) {
@@ -170,6 +215,8 @@ class AppModel extends ChangeNotifier {
     var txtList = filterTextFiles(filePathList);
     return txtList;
   }
+
+  void saveQuery(String queryReg) {}
 }
 
 void getAllFiles(String path, List<String> list) {

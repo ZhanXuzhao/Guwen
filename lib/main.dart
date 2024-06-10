@@ -1,12 +1,15 @@
 // ignore_for_file: prefer_const_constructors, avoid_print
 
 import 'dart:convert';
+import 'dart:developer';
 import 'dart:io';
 
+import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
+import 'package:leancloud_storage/leancloud.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
@@ -257,22 +260,26 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
     print('main init state');
     print('curSearchTab: $curSearchTab');
-    curSearchTab=appModel.curYuliaoType;
+    curSearchTab = appModel.curYuliaoType;
     print('curSearchTab update: $curSearchTab');
 
-    appModel.initSp().then((onValue) {
+    appModel.init().then((onValue) {
       var rs = appModel.getRegStr();
       regController.text = rs == ".*" ? "" : rs;
       extralPathController.text = appModel.getYuliaoPath();
       exportPathController.text = appModel.getExportPathStr();
       appModel.initYuliaoType();
+
+      initDb();
+      testDb();
     });
     // searchData();
   }
 
   int? curSearchTab = 0;
+
   // var searchTabs = ["现代汉语", "近代汉语", "古汉语", "指定文献"];
-  var searchTabs = ["古代汉语", "近代报刊", "现代汉语","外部文献", "指定文献"];
+  var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
 
   //page build
   @override
@@ -284,8 +291,8 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
         backgroundColor: Theme.of(context).primaryColor,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 32,
-            fontFamily: "楷体"),
+        titleTextStyle:
+            TextStyle(color: Colors.white, fontSize: 32, fontFamily: "楷体"),
         automaticallyImplyLeading: false,
       ),
       // homepage body
@@ -341,6 +348,7 @@ class _MyHomePageState extends State<MyHomePage> {
             // search tabs 现代汉语、近代汉语、古汉语、指定文献
             Wrap(
               spacing: 8,
+              runSpacing: 8,
               alignment: WrapAlignment.start,
               children: List<Widget>.generate(
                 searchTabs.length,
@@ -352,6 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() {
                         curSearchTab = selected ? index : curSearchTab;
                         appModel.setYuliaoType(index);
+                        testDb();
                         if (curSearchTab == searchTabs.length - 1) {
                           FileListPage.launch(context, textFilePath, true);
                         }
@@ -361,7 +370,6 @@ class _MyHomePageState extends State<MyHomePage> {
                 },
               ).toList(),
             ),
-
 
             Container(
               height: 8,
@@ -427,6 +435,68 @@ class _MyHomePageState extends State<MyHomePage> {
         child: const Icon(Icons.download),
       ), // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void initDb() {
+    LeanCloud.initialize(
+        'VK6ZRvXfLOpuaColXhtwMnMq-gzGzoHsz', 'i99dklDAq3xbCPMU468evvhj',
+        server: 'https://vk6zrvxf.lc-cn-n1-shared.com',
+        // to use your own custom domain
+        queryCache: new LCQueryCache() // optinoal, enable cache
+        );
+    LCLogger.setLevel(LCLogger.DebugLevel);
+    DataUtil.init();
+  }
+
+  void testDb() {
+    LCQuery<LCObject> query = new LCQuery<LCObject>('AppUser');
+    query.limit(10);
+    query.find();
+    query.find().then((list) {
+      if (list == null) {
+        log('empty');
+      }
+      for (var l in list!) {
+        log("l in list  $l - ${l['intValue']}\n");
+      }
+    });
+
+    initStudent();
+    // testDbAsync();
+  }
+
+  Future<void> testDbAsync() async {
+    initStudent();
+    var query = LCQuery("Student");
+    var student = await query.first();
+    print(student);
+  }
+
+  void initStudent() {
+    School school = new School();
+    school.name = "school-001";
+    school.save();
+
+    Clas clas = Clas();
+    clas.school = school;
+    clas.name = "class-001";
+    clas.save();
+
+    Student student = Student();
+    student.id = "test_001";
+    student.save();
+
+    Teacher teacher = Teacher();
+    teacher.save();
+
+    User user = User();
+    user.name = "Jack1";
+    user.type = 2;
+    user.student = student;
+    user.teacher = teacher;
+    user.save();
+
+    log('init student success');
   }
 }
 
