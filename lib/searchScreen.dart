@@ -56,7 +56,7 @@ class _SearchScreenState extends State<StatefulWidget> {
     regController.dispose();
     extralPathController.dispose();
     exportPathController.dispose();
-    appModel.dispose();
+    // appModel.dispose();
     super.dispose();
   }
 
@@ -70,6 +70,7 @@ class _SearchScreenState extends State<StatefulWidget> {
       showMessage("请输入搜索条件");
       return;
     }
+    appModel.sendSearchRequest(regStr);
     var startTime = DateTime.now().millisecondsSinceEpoch;
     clearPreSearchData();
 

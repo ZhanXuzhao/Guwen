@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:f05/beans.dart';
+import 'package:f05/models.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:leancloud_storage/leancloud.dart';
@@ -17,15 +18,24 @@ class _StaticScreenState extends State<StatefulWidget> {
     "1天",
     "7天",
     "30天",
+    "全部",
     "自定义时间",
   ];
 
   var curTimeClipIndex = 0;
+  late AppModel appModel;
+  Map<String, int> searchMap = {};
+
+  @override
+  void initState() {
+    appModel = AppModel();
+    super.initState();
+    onDateTabClick(0, context);
+  }
 
   @override
   Widget build(BuildContext context) {
-    // var list =
-    return Container(
+    var container = Container(
       margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Column(
         children: [
@@ -44,14 +54,7 @@ class _StaticScreenState extends State<StatefulWidget> {
                       if (selected) {
                         curTimeClipIndex = index;
                       }
-                      if (curTimeClipIndex < 3) {
-                        // todo
-
-                        querySearchHistory(DateTime.now(), DateTime.now());
-                      } else {
-                        // pickTime()
-                        onDatePickPressed(context, 1);
-                      }
+                      onDateTabClick(curTimeClipIndex, context);
                     });
                   },
                 );
@@ -62,26 +65,48 @@ class _StaticScreenState extends State<StatefulWidget> {
             height: 8,
           ),
 
-
           // ui search list
           Expanded(
             child: ListView.builder(
                 // fix bug Cannot hit test a render box that has never been laid out.
                 shrinkWrap: true,
-                itemCount: 100,
+                itemCount: searchMap.entries.length,
                 itemBuilder: (context, index) => Padding(
                     padding: EdgeInsets.all(4),
                     child: Text(
-                      "search reg -- $index",
+                      "${searchMap.keys.elementAt(index)} ——"
+                      " ${searchMap.values.elementAt(index)} 次",
                     ))),
           )
         ],
       ),
     );
+    return container;
+  }
+
+  void onDateTabClick(int index, BuildContext context) {
+    if (index < 3) {
+      late DateTime start;
+      // DateTime dateTime = DateTime.now().add(Duration(days: 30));
+
+      if (index == 0) {
+        start = DateTime.now().subtract(Duration(days: 1));
+      } else if (index == 1) {
+        start = DateTime.now().subtract(Duration(days: 7));
+      } else {
+        start = DateTime.now().subtract(Duration(days: 30));
+      }
+      querySearchHistory(start, DateTime.now());
+    } else if (index == 3) {
+      querySearchHistoryAll();
+    } else {
+      // pickTime()
+      onDatePickPressed(context);
+    }
   }
 
   //https://api.flutter.dev/flutter/material/showDateRangePicker.html
-  onDatePickPressed(BuildContext context, int i) {
+  onDatePickPressed(BuildContext context) {
     showDateRangePicker(
             context: context,
             firstDate: DateTime.parse('2024-01-01'),
@@ -93,7 +118,14 @@ class _StaticScreenState extends State<StatefulWidget> {
     });
   }
 
-  void querySearchHistory(DateTime dateTime, DateTime dateTime2) {
+  void querySearchHistory(DateTime start, DateTime end) {
+    appModel.getSearchHistory(start, end).then((map) {
+      searchMap = map;
+      setState(() {});
+    });
+  }
 
+  void querySearchHistoryAll() {
+    querySearchHistory(DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
   }
 }

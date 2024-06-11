@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:intl/intl.dart';
 import 'package:leancloud_storage/leancloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/foundation.dart';
@@ -32,7 +33,7 @@ List<String> listDir(String path) {
 }
 
 const String textFilePathDebug = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
-var innerYuliaoPathDebug = 'D:/Projects/GHY/汉语语例溯源系统库'; // 内置预料目录列表 test
+var innerYuliaoPathDebug = 'D:/Projects/GHY/汉语语例溯源系统库short'; // 内置预料目录列表 test
 var innerYuliaoPathRelease = '/data/yl/汉语语例溯源系统库'; // 内置预料目录列表 release
 
 class AppModel extends ChangeNotifier {
@@ -43,9 +44,7 @@ class AppModel extends ChangeNotifier {
   }
 
   AppModel._internal() {
-    // addRootDir(textFilePath);
-    // initSp(); // async
-    initDb();
+    // init
   }
 
   late SharedPreferences sp;
@@ -59,38 +58,52 @@ class AppModel extends ChangeNotifier {
 
   //student
   int? userType = 0; //0 undefine, 1 student, 2 teacher
-  late User user;
+  late LCObject user;
   Student? student;
   Teacher? teacher;
 
   Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
+    initDb();
     initUser();
-
     return true;
+  }
+
+  void clearCache() {
+    cacheUserId("");
   }
 
   Future<void> initUser() async {
     userType = sp.getInt("user_type") ?? 0;
-    if (userType == 0) {
+    var userId = sp.getString("userId") ?? "";
+    log("initUser userId: $userId");
+    if (userId == "") {
       user = User();
+      var timeStr = DateFormat('yyyy-MM-dd hh:mm').format(DateTime.now());
+      user['name'] = "Jack from $timeStr";
+      log("initUser new: $user");
       await user.save();
-      setUserId(user.objectId);
-      log("user $user");
+      log("initUser save: $user");
+      cacheUserId(user.objectId);
+      userId = user.objectId!;
       return;
-    }
-    var userId = getUserId();
-    user = (await LCQuery("User").whereEqualTo("objectId", userId).first())
-        as User;
-    if (userType == 1) {
-      student = (await LCQuery("Student")
-          .whereEqualTo("id", user.student.id)
-          .first()) as Student?;
     } else {
-      teacher = (await LCQuery("Student").whereEqualTo("id", user.teacher.id))
-          as Teacher?;
+      user =
+          (await LCQuery("AppUser").whereEqualTo("objectId", userId).first())!;
+
+      // user = (await LCQuery("AppUser").whereEqualTo("objectId", userId).first())
+      //     as User;
     }
-    log("init user $user");
+
+    if (userType == 1) {
+      // student = (await LCQuery("Student")
+      //     .whereEqualTo("id", user.student.id)
+      //     .first()) as Student?;
+    } else {
+      // teacher = (await LCQuery("Student").whereEqualTo("id", user.teacher.id))
+      //     as Teacher?;
+    }
+    log("initUser $user");
 
     // user.toJson();
   }
@@ -101,7 +114,7 @@ class AppModel extends ChangeNotifier {
         server: 'https://vk6zrvxf.lc-cn-n1-shared.com',
         // to use your own custom domain
         queryCache: new LCQueryCache() // optinoal, enable cache
-    );
+        );
     LCLogger.setLevel(LCLogger.DebugLevel);
     DataUtil.init();
   }
@@ -124,6 +137,51 @@ class AppModel extends ChangeNotifier {
 
     initStudent();
     // testDbAsync();
+  }
+
+  sendSearchRequest(String reg) {
+    // var request = SearchRequest();
+    // request.reg = reg;
+    // request.user = user;
+    // request.save();
+    var sr = LCObject("SearchRequest");
+    sr['reg'] = reg;
+    sr['user'] = user;
+    sr.save();
+  }
+
+  getSearchHistory(DateTime start, DateTime end) async {
+    var query = LCQuery("SearchRequest");
+    query.whereGreaterThan('createdAt', start);
+    query.whereLessThan("createdAt", end);
+    query.limit(1000);
+    List<LCObject>? list = await query.find();
+
+    // void main() {
+    //   var temp= {
+    //     'A' : 3,
+    //     'B' : 1,
+    //     'C' : 2
+    //   };
+    //
+    //   var sortedKeys = temp.keys.toList(growable:false)
+    //     ..sort((k1, k2) => temp[k1].compareTo(temp[k2]));
+    //   LinkedHashMap sortedMap = new LinkedHashMap
+    //       .fromIterable(sortedKeys, key: (k) => k, value: (k) => temp[k]);
+    //   print(sortedMap);
+    // }
+
+    Map<String, int> map = {};
+    for (var sr in list!) {
+      var reg = sr['reg'];
+      var cur = map[reg] ?? 0;
+      map[reg] = cur + 1;
+    }
+    var sortedByValueMap = Map.fromEntries(
+        map.entries.toList()..sort((e1, e2) => -e1.value.compareTo(e2.value)));
+    log("Search history: $sortedByValueMap");
+
+    return sortedByValueMap;
   }
 
   Future<void> testDbAsync() async {
@@ -164,7 +222,7 @@ class AppModel extends ChangeNotifier {
     return sp.getString("userId") ?? "";
   }
 
-  void setUserId(String? id) {
+  void cacheUserId(String? id) {
     sp.setString("userId", id ?? "");
   }
 
@@ -205,13 +263,13 @@ class AppModel extends ChangeNotifier {
     curYuliaoType = type;
     selectedFiles.clear();
     var path = "";
-    if(kReleaseMode){
+    if (kReleaseMode) {
       path = Directory.current.path + innerYuliaoPathRelease;
     } else {
       path = innerYuliaoPathDebug;
     }
     var fileList = listDir(path);
-    if (type < fileList.length ) {
+    if (type < fileList.length) {
       var dir = fileList[type];
       selectedFiles.add(dir);
     }

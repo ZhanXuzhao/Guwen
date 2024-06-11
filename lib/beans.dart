@@ -21,19 +21,25 @@ class User extends LCObject {
 
   set name(String value) => this['name'] = value;
 
-  int get type => this['type'];
+  int get type => this['type']??0;
 
-  set type(int value) => this['type'] = value;
+  set type(int? value) => this['type'] = value;
 
-  Student get student => this['student'] ?? 0;
+  Student? get student => this['student'] ?? 0;
 
-  set student(Student value) => this['student'] = value;
+  set student(Student? value) => this['student'] = value;
 
-  Teacher get teacher => this['teacher'];
+  Teacher? get teacher => this['teacher'];
 
-  set teacher(Teacher value) => this['teacher'] = value;
+  set teacher(Teacher? value) => this['teacher'] = value;
 
   User() : super('AppUser');
+  // static parse(LCObject obj) {
+  //   var u = User();
+  //   u.name = obj['name'];
+  //   u.type = obj['type'];
+  //   u.objectId = obj['objectId'];
+  // }
 
   // factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
   // Map<String, dynamic> toJson() => _$UserToJson(this);
@@ -87,25 +93,30 @@ class School extends LCObject {
   School() : super('School');
 }
 
-class QueryRequest extends LCObject {
+class SearchRequest extends LCObject {
   String get reg => this['reg'];
 
   set reg(String value) => this['reg'] = value;
 
-  Student get student => this['Student'];
+  User get user => this['User'];
 
-  set student(Student value) => this['Student'] = value;
+  set user(User value) => this['User'] = value;
 
-  QueryRequest() : super('QueryRequest');
+  // Student get student => this['Student'];
+  //
+  // set student(Student value) => this['Student'] = value;
+
+  SearchRequest() : super('SearchRequest');
 }
 
 class DataUtil {
   static init() {
-    LCObject.registerSubclass<Student>('Student', () => new Student());
-    LCObject.registerSubclass<Student>('Teacher', () => new Teacher());
-    LCObject.registerSubclass<Student>('Clas', () => new Clas());
-    LCObject.registerSubclass<Student>('School', () => new School());
-    LCObject.registerSubclass<Student>('QueryRequest', () => new QueryRequest());
+    LCObject.registerSubclass<Student>('AppUser', () => User());
+    LCObject.registerSubclass<Student>('Student', () => Student());
+    LCObject.registerSubclass<Student>('Teacher', () => Teacher());
+    LCObject.registerSubclass<Student>('Clas', () => Clas());
+    LCObject.registerSubclass<Student>('School', () => School());
+    LCObject.registerSubclass<Student>('SearchRequest', () => SearchRequest());
   }
 
   static Future<List<LCObject>?> queryStudentByName(String name) {

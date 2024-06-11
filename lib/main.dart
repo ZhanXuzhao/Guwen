@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
+import 'profileScreen.dart';
 import 'staticScreen.dart';
 
 void main() {
@@ -221,7 +222,7 @@ class _MyHomePageState extends State<MyHomePage> {
         // const SearchScreen2(),
         SearchScreen2(),
         StaticScreen(),
-        ExploreScreen(),
+        ProfileScreen2(),
 
       ][navBarIndex],
 
