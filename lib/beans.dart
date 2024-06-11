@@ -87,7 +87,7 @@ class School extends LCObject {
   School() : super('School');
 }
 
-class GhyQuery extends LCObject {
+class QueryRequest extends LCObject {
   String get reg => this['reg'];
 
   set reg(String value) => this['reg'] = value;
@@ -96,7 +96,7 @@ class GhyQuery extends LCObject {
 
   set student(Student value) => this['Student'] = value;
 
-  GhyQuery() : super('GhyQuery');
+  QueryRequest() : super('QueryRequest');
 }
 
 class DataUtil {
@@ -105,7 +105,7 @@ class DataUtil {
     LCObject.registerSubclass<Student>('Teacher', () => new Teacher());
     LCObject.registerSubclass<Student>('Clas', () => new Clas());
     LCObject.registerSubclass<Student>('School', () => new School());
-    LCObject.registerSubclass<Student>('GhyQuery', () => new GhyQuery());
+    LCObject.registerSubclass<Student>('QueryRequest', () => new QueryRequest());
   }
 
   static Future<List<LCObject>?> queryStudentByName(String name) {
@@ -115,5 +115,4 @@ class DataUtil {
     return find;
   }
 
-  static saveGhyQuery() {}
 }
