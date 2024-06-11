@@ -17,6 +17,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
+import 'staticScreen.dart';
 
 void main() {
   // init app module
@@ -188,46 +189,41 @@ class _MyHomePageState extends State<MyHomePage> {
             TextStyle(color: Colors.white, fontSize: 32, fontFamily: "楷体"),
         automaticallyImplyLeading: false,
       ),
-      // bottomNavigationBar: BottomNavigationBar(
-      //   type: BottomNavigationBarType.fixed,
-      //   currentIndex: navBarIndex,
-      //   onTap: (index) {
-      //     setState(() {
-      //       navBarIndex = index;
-      //     });
-      //   },
-      //   items: const [
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.search),
-      //       label: '搜索-',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.timeline),
-      //       label: '统计',
-      //     ),
-      //     BottomNavigationBarItem(
-      //       icon: Icon(Icons.account_circle_outlined),
-      //       label: '我的',
-      //     ),
-      //   ],
-      // ),
-      // floatingActionButton: FloatingActionButton(
-      //   onPressed: exportSearchResult,
-      //   tooltip: '下载',
-      //   child: const Icon(Icons.download),
-      // ),
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        currentIndex: navBarIndex,
+        onTap: (index) {
+          setState(() {
+            navBarIndex = index;
+          });
+        },
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.search),
+            label: '搜索-',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.timeline),
+            label: '统计',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.account_circle_outlined),
+            label: '我的',
+          ),
+        ],
+      ),
 
-      body: SearchScreen2(),
 
-      // // homepage body
-      // body: [
-      //   //
-      //   // const SearchScreen2(),
-      //   SearchScreen2(),
-      //   SearchScreen(),
-      //   ExploreScreen(),
-      //
-      // ][navBarIndex],
+      // body: SearchScreen2(),
+
+      body: [
+        //
+        // const SearchScreen2(),
+        SearchScreen2(),
+        StaticScreen(),
+        ExploreScreen(),
+
+      ][navBarIndex],
 
 // This trailing comma makes auto-formatting nicer for build methods.
     );
