@@ -137,7 +137,7 @@ class AppModel extends ChangeNotifier {
     curYuliaoType = type;
     selectedFiles.clear();
     var fileList = listDir(innerYuliaoPath);
-    if (type < fileList.length - 1) {
+    if (type < fileList.length ) {
       var dir = fileList[type];
       selectedFiles.add(dir);
     }

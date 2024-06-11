@@ -271,15 +271,15 @@ class _MyHomePageState extends State<MyHomePage> {
       appModel.initYuliaoType();
 
       initDb();
-      testDb();
     });
     // searchData();
   }
 
   int? curSearchTab = 0;
 
-  // var searchTabs = ["现代汉语", "近代汉语", "古汉语", "指定文献"];
-  var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
+  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
+
+  // var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
 
   //page build
   @override
@@ -360,7 +360,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       setState(() {
                         curSearchTab = selected ? index : curSearchTab;
                         appModel.setYuliaoType(index);
-                        testDb();
+                        testDb(false);
                         if (curSearchTab == searchTabs.length - 1) {
                           FileListPage.launch(context, textFilePath, true);
                         }
@@ -448,7 +448,10 @@ class _MyHomePageState extends State<MyHomePage> {
     DataUtil.init();
   }
 
-  void testDb() {
+  void testDb(bool test) {
+    if(!test){
+      return;
+    }
     LCQuery<LCObject> query = new LCQuery<LCObject>('AppUser');
     query.limit(10);
     query.find();
