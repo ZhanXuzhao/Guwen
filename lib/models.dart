@@ -5,6 +5,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:leancloud_storage/leancloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 import 'beans.dart';
 
@@ -30,8 +31,9 @@ List<String> listDir(String path) {
   return subs;
 }
 
-const String textFilePath = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
-var innerYuliaoPath = 'D:/Projects/GHY/汉语语例溯源系统库'; // 内置预料目录列表
+const String textFilePathDebug = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
+var innerYuliaoPathDebug = 'D:/Projects/GHY/汉语语例溯源系统库'; // 内置预料目录列表 test
+var innerYuliaoPathRelease = '/data/yl/汉语语例溯源系统库'; // 内置预料目录列表 release
 
 class AppModel extends ChangeNotifier {
   static final AppModel _instance = AppModel._internal();
@@ -136,7 +138,13 @@ class AppModel extends ChangeNotifier {
     print("set yuliao type: $type");
     curYuliaoType = type;
     selectedFiles.clear();
-    var fileList = listDir(innerYuliaoPath);
+    var path = "";
+    if(kReleaseMode){
+      path = Directory.current.path + innerYuliaoPathRelease;
+    } else {
+      path = innerYuliaoPathDebug;
+    }
+    var fileList = listDir(path);
     if (type < fileList.length ) {
       var dir = fileList[type];
       selectedFiles.add(dir);

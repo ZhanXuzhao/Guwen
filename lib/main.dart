@@ -6,6 +6,7 @@ import 'dart:io';
 
 import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
@@ -167,6 +168,15 @@ class _MyHomePageState extends State<MyHomePage> {
           if (isMatch) {
             // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
             var fileName = getFileDirLocation(file.path);
+            // 消除绝对路径的父路径
+            if (kReleaseMode) {
+              fileName = fileName.replaceFirst(
+                  Directory.current.path + innerYuliaoPathRelease + "\\", "");
+            } else {
+              fileName = fileName.replaceFirst(innerYuliaoPathDebug + "\\", "");
+            }
+            // 消除路径中的数字、小数点
+            fileName = fileName.replaceAll(RegExp("\\d|\\.|.txt"), "");
             // basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
             var s = "$line —— $fileName";
             searchedTextList.add(s);
@@ -188,7 +198,7 @@ class _MyHomePageState extends State<MyHomePage> {
     for (var rootPath in appModel.externalDirs) {
       filePath = filePath.replaceAll(rootPath, "");
     }
-    return filePath.replaceAll(RegExp("\\d|.txt"), "");
+    return filePath;
   }
 
   void showMessage(String msg) {
@@ -362,7 +372,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         appModel.setYuliaoType(index);
                         testDb(false);
                         if (curSearchTab == searchTabs.length - 1) {
-                          FileListPage.launch(context, textFilePath, true);
+                          FileListPage.launch(
+                              context, kDebugMode ? textFilePathDebug : "", true);
                         }
                       });
                     },
@@ -393,6 +404,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     "示例（可点击）：",
                     style: TextStyle(color: Theme.of(context).primaryColor),
                   ),
+
+                  // Text(
+                  //   "cur path：${Directory.current.path}",
+                  //   style: TextStyle(color: Theme.of(context).primaryColor),
+                  // ),
+
                   Container(
                     height: 8,
                   ),
@@ -449,7 +466,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void testDb(bool test) {
-    if(!test){
+    if (!test) {
       return;
     }
     LCQuery<LCObject> query = new LCQuery<LCObject>('AppUser');
