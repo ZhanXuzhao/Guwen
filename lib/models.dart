@@ -45,6 +45,7 @@ class AppModel extends ChangeNotifier {
   AppModel._internal() {
     // addRootDir(textFilePath);
     // initSp(); // async
+    initDb();
   }
 
   late SharedPreferences sp;
@@ -92,6 +93,71 @@ class AppModel extends ChangeNotifier {
     log("init user $user");
 
     // user.toJson();
+  }
+
+  void initDb() {
+    LeanCloud.initialize(
+        'VK6ZRvXfLOpuaColXhtwMnMq-gzGzoHsz', 'i99dklDAq3xbCPMU468evvhj',
+        server: 'https://vk6zrvxf.lc-cn-n1-shared.com',
+        // to use your own custom domain
+        queryCache: new LCQueryCache() // optinoal, enable cache
+    );
+    LCLogger.setLevel(LCLogger.DebugLevel);
+    DataUtil.init();
+  }
+
+  void testDb(bool test) {
+    if (!test) {
+      return;
+    }
+    LCQuery<LCObject> query = new LCQuery<LCObject>('AppUser');
+    query.limit(10);
+    query.find();
+    query.find().then((list) {
+      if (list == null) {
+        log('empty');
+      }
+      for (var l in list!) {
+        log("l in list  $l - ${l['intValue']}\n");
+      }
+    });
+
+    initStudent();
+    // testDbAsync();
+  }
+
+  Future<void> testDbAsync() async {
+    initStudent();
+    var query = LCQuery("Student");
+    var student = await query.first();
+    print(student);
+  }
+
+  void initStudent() {
+    School school = new School();
+    school.name = "school-001";
+    school.save();
+
+    Clas clas = Clas();
+    clas.school = school;
+    clas.name = "class-001";
+    clas.save();
+
+    Student student = Student();
+    student.id = "test_001";
+    student.save();
+
+    Teacher teacher = Teacher();
+    teacher.save();
+
+    User user = User();
+    user.name = "Jack1";
+    user.type = 2;
+    user.student = student;
+    user.teacher = teacher;
+    user.save();
+
+    log('init student success');
   }
 
   String getUserId() {
