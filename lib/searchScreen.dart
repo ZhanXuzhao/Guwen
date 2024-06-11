@@ -42,6 +42,9 @@ class _SearchScreenState extends State<StatefulWidget> {
   var searchResultStaticText = "";
   var searchDurationText = "";
   var exampleSearchText = ['之', '之.者', '之.*者', '之.{1,4}者'];
+  int? curSearchTab = 0;
+  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
+  var showExportButton = false;
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
@@ -58,6 +61,7 @@ class _SearchScreenState extends State<StatefulWidget> {
   }
 
   Future<void> searchData() async {
+    showExportButton = false;
     var hasReg = processSearchReg();
     if (!hasReg) {
       clearPreSearchData();
@@ -93,11 +97,10 @@ class _SearchScreenState extends State<StatefulWidget> {
 
       updateUI();
     }
-
-    print(
-        "search finished  $searchTotalFiles files get $searchProgress sentence");
+    log("search finished  $searchTotalFiles files get $searchProgress sentence");
+    showExportButton = true;
     updateUI();
-    showMessage("搜索完成");
+    // showMessage("搜索完成");
   }
 
   void clearPreSearchData() {
@@ -238,12 +241,6 @@ class _SearchScreenState extends State<StatefulWidget> {
     });
     // searchData();
   }
-
-  int? curSearchTab = 0;
-
-  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
-
-  // var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
 
   //page build
   @override
@@ -386,30 +383,38 @@ class _SearchScreenState extends State<StatefulWidget> {
               ],
             ),
 
-          // Stack(
-          //   children: [
-          //     DataListView(textList: searchedTextList),
-          //     Positioned(
-          //       top: 0,
-          //       bottom: 0,
-          //       left: 0,
-          //       right: 0,
-          //       child: DataListView(textList: searchedTextList),
-          //     ),
-          //     FloatingActionButton(
-          //       onPressed: exportSearchResult,
-          //       tooltip: '下载',
-          //       child: const Icon(Icons.download),
-          //     ),
-          //   ],
-          // ),
+          const SizedBox(
+            height: 8,
+          ),
+          // DataListView(textList: searchedTextList),
+          Expanded(
+            child: Stack(
+              children: [
+                // bg, make Stack expend
+                const SizedBox(
+                  height: double.infinity,
+                  width: double.infinity,
+                  // color: Colors.green,
+                ),
 
-          // 搜索结果 date list
-          DataListView(textList: searchedTextList),
-          FloatingActionButton(
-            onPressed: exportSearchResult,
-            tooltip: '下载',
-            child: const Icon(Icons.download),
+                // list of search result
+                Positioned.fill(
+                  child: DataListView(textList: searchedTextList),
+                ),
+
+                // export button
+                if (showExportButton)
+                  Positioned(
+                    bottom: 32,
+                    right: 32,
+                    child: FloatingActionButton(
+                      onPressed: exportSearchResult,
+                      tooltip: '下载',
+                      child: const Icon(Icons.download),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ],
       ),
@@ -452,26 +457,18 @@ class DataListView extends StatelessWidget {
           ));
       hightWords.addEntries([entry]);
     }
-    print("build text list view2");
-    return Expanded(
-        child: ListView.builder(
-            // fix bug Cannot hit test a render box that has never been laid out.
-            shrinkWrap: true,
-            itemCount: textList.length,
-            itemBuilder: (context, index) => Padding(
-                padding: EdgeInsets.all(4),
-                child: TextHighlight(
-                  text: textList[index],
-                  words: hightWords,
-                ))));
+    // print("build text list view2");
 
-    // return Expanded(
-    //     child: ListView.builder(
-    //         itemCount: textList.length,
-    //         itemBuilder: (context, index) => Padding(
-    //             padding: EdgeInsets.all(4),
-    //             child: Text(
-    //               textList[index],
-    //             ))));
+    return ListView.builder(
+        // fix bug Cannot hit test a render box that has never been laid out.
+        shrinkWrap: true,
+        itemCount: textList.length,
+        itemBuilder: (context, index) => Padding(
+            padding: EdgeInsets.all(4),
+            child: TextHighlight(
+              text: textList[index],
+              words: hightWords,
+            )));
+
   }
 }
