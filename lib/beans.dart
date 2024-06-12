@@ -33,7 +33,7 @@ class User extends LCObject {
 
   set clas(Clas? value) => this['clas'] = value;
 
-  Student? get student => this['student'] ;
+  Student? get student => this['student'];
 
   set student(Student? value) => this['student'] = value;
 
@@ -94,6 +94,8 @@ class Teacher extends LCObject {
 }
 
 class Clas extends LCObject {
+  LCObject? lco;
+
   String get id => this['id'] ?? objectId;
 
   set id(String? value) => this['id'] = value;
@@ -110,6 +112,7 @@ class Clas extends LCObject {
 
   static Clas parse(LCObject obj) {
     Clas clas = Clas();
+    clas.lco = obj;
     clas.id = obj.objectId;
     clas.name = obj['name'];
     clas.school = obj['School'];

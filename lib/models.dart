@@ -84,7 +84,7 @@ class AppModel extends ChangeNotifier {
       user = User.parse(uo);
       log("initUser from cloud: $user");
     }
-    if(user.clas!=null){
+    if (user.clas != null) {
       var co = await LCQuery("Clas").get(user.clas!.id);
       user.clas = Clas.parse(co!);
     }
@@ -100,6 +100,7 @@ class AppModel extends ChangeNotifier {
     user['name'] = "Jack from $timeStr";
     // user.save()后才会生产objectID
     await user.save();
+    initUserClass();
     return user;
   }
 
@@ -198,11 +199,15 @@ class AppModel extends ChangeNotifier {
     print(student);
   }
 
-  Future<void> setUserClass() async {
-    var co = await LCQuery("Clas").first();
+  initUserClass() {
+    setUserClass(null);
+  }
+
+  Future<void> setUserClass(LCObject? co) async {
+    co ??= await LCQuery("Clas").first();
     var clas = Clas.parse(co!);
     user.clas = clas;
-    updateUserDb('clas', co);
+    await updateUserDb('clas', co);
   }
 
   updateUserDb(String key, dynamic value) async {
@@ -373,7 +378,7 @@ class AppModel extends ChangeNotifier {
 
   Future<List<Clas>> getClasses() async {
     var query = LCQuery("Clas");
-    var classes = await query.find();
+    var classes = await getClasLCOList();
     List<Clas> list = [];
     for (var c in classes!) {
       log("class data: $c");
@@ -381,6 +386,12 @@ class AppModel extends ChangeNotifier {
       list.add(clas);
     }
     return list;
+  }
+
+  Future<List<LCObject>?> getClasLCOList() async {
+    var query = LCQuery("Clas");
+    var classes = await query.find();
+    return classes;
   }
 }
 
