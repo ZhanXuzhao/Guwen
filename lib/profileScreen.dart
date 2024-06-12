@@ -1,5 +1,4 @@
 import 'dart:developer';
-import 'dart:math' as math;
 
 import 'package:f05/models.dart';
 import 'package:flutter/cupertino.dart';
@@ -275,16 +274,16 @@ class _ProfileScreenState extends State<StatefulWidget> {
 }
 
 class TitleTextWithBg extends StatelessWidget {
-  TitleTextWithBg({super.key, required this.title});
+  const TitleTextWithBg({super.key, required this.title});
 
-  String title;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
     // final String t = title;
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.all(8),
+      padding: const EdgeInsets.all(8),
       color: Theme.of(context).primaryColor,
       child: Text(
         title,
@@ -295,25 +294,25 @@ class TitleTextWithBg extends StatelessWidget {
 }
 
 class SchoolListWrap extends StatefulWidget {
-  SchoolListWrap({super.key, required this.onValueSet});
+  const SchoolListWrap({super.key, required this.onValueSet});
 
-  ValueSetter<School> onValueSet;
+  final ValueSetter<School> onValueSet;
 
   @override
   State<StatefulWidget> createState() {
-    return _SchoolWrapState(onValueSet: onValueSet);
+    return _SchoolWrapState();
   }
 }
 
-class _SchoolWrapState extends State<StatefulWidget> {
-  _SchoolWrapState({required this.onValueSet}) {
-    // super(key:super.key);
-  }
+class _SchoolWrapState extends State<SchoolListWrap> {
+  // _SchoolWrapState({required this.onValueSet}) {
+  //   // super(key:super.key);
+  // }
 
   late List<School> dataList = [];
   int? curIndex;
   AppModel appModel = AppModel();
-  ValueSetter<School> onValueSet;
+  // ValueSetter<School> onValueSet;
 
   @override
   void initState() {
@@ -338,8 +337,8 @@ class _SchoolWrapState extends State<StatefulWidget> {
                 curIndex = index;
                 // curClassId = classList[curClassChipIndex].id;
                 // querySearchHistory(curStarDate, curEndDate);
-                var clas = dataList[curIndex!].lco;
-                onValueSet(dataList[curIndex!]);
+                // var clas = dataList[curIndex!].lco;
+                widget.onValueSet(dataList[curIndex!]);
               }
               setState(() {});
             },
@@ -366,25 +365,22 @@ class _SchoolWrapState extends State<StatefulWidget> {
 }
 
 class ClassListWrap extends StatefulWidget {
-  ClassListWrap({super.key, required this.onClasSet});
+  const ClassListWrap({super.key, required this.onClasSet});
 
-  ValueSetter<Clas> onClasSet;
+  final ValueSetter<Clas> onClasSet;
 
   @override
   State<StatefulWidget> createState() {
-    return _ClassListWrapState(onClasSet: onClasSet);
+    return _ClassListWrapState();
   }
 }
 
-class _ClassListWrapState extends State<StatefulWidget> {
-  _ClassListWrapState({required this.onClasSet}) {
-    // super(key:super.key);
-  }
+class _ClassListWrapState extends State<ClassListWrap> {
 
   late List<Clas> classList = [];
-  int? curIndex = null;
+  int? curIndex;
   AppModel appModel = AppModel();
-  ValueSetter<Clas> onClasSet;
+  // ValueSetter<Clas> onClasSet;
 
   @override
   void initState() {
@@ -409,8 +405,8 @@ class _ClassListWrapState extends State<StatefulWidget> {
                 curIndex = index;
                 // curClassId = classList[curClassChipIndex].id;
                 // querySearchHistory(curStarDate, curEndDate);
-                var clas = classList[curIndex!].lco;
-                onClasSet(classList[curIndex!]);
+                // var clas = classList[curIndex!].lco;
+                widget.onClasSet(classList[curIndex!]);
               }
               setState(() {});
             },
