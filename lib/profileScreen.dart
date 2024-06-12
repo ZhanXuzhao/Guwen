@@ -17,7 +17,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
   @override
   void initState() {
     appModel = AppModel();
-    appModel.init();
+    // appModel.init();
     super.initState();
   }
 
