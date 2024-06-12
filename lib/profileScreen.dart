@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:f05/models.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -23,20 +25,30 @@ class _ProfileScreenState extends State<StatefulWidget> {
   Widget build(BuildContext context) {
     return Container(
       margin: EdgeInsets.fromLTRB(8, 8, 8, 0),
-      child: Column(
+      child: Wrap(
+        spacing: 4,
+        runSpacing: 4,
         children: [
           ElevatedButton(
               onPressed: () {
                 appModel.clearCache();
               },
-              child: Text("Clear Cache")
-          ),
+              child: Text("Clear Cache")),
           ElevatedButton(
               onPressed: () {
                 appModel.initUser();
               },
-              child: Text("init user")
-          ),
+              child: Text("init user")),
+          ElevatedButton(
+              onPressed: () {
+                appModel.setUserClass();
+              },
+              child: Text("setUserClass")),
+          ElevatedButton(
+              onPressed: () {
+                appModel.sendSearchRequest("user test ${Random().nextInt(1000)}");
+              },
+              child: Text("sendSearchRequest")),
         ],
       ),
     );

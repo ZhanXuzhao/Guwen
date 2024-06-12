@@ -58,9 +58,7 @@ class AppModel extends ChangeNotifier {
 
   //student
   int? userType = 0; //0 undefine, 1 student, 2 teacher
-  late LCObject user;
-  Student? student;
-  Teacher? teacher;
+  late User user;
 
   Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
@@ -78,34 +76,31 @@ class AppModel extends ChangeNotifier {
     var userId = sp.getString("userId") ?? "";
     log("initUser userId: $userId");
     if (userId == "") {
-      user = User();
-      var timeStr = DateFormat('yyyy-MM-dd hh:mm').format(DateTime.now());
-      user['name'] = "Jack from $timeStr";
-      log("initUser new: $user");
-      await user.save();
-      log("initUser save: $user");
-      cacheUserId(user.objectId);
-      userId = user.objectId!;
-      return;
+      user = await createUserDb();
+      cacheUserId(user.id);
+      log("initUser create: $user");
     } else {
-      user =
-          (await LCQuery("AppUser").whereEqualTo("objectId", userId).first())!;
-
-      // user = (await LCQuery("AppUser").whereEqualTo("objectId", userId).first())
-      //     as User;
+      var uo = (await LCQuery("AppUser").get(userId))!;
+      user = User.parse(uo);
+      log("initUser from cloud: $user");
     }
-
-    if (userType == 1) {
-      // student = (await LCQuery("Student")
-      //     .whereEqualTo("id", user.student.id)
-      //     .first()) as Student?;
-    } else {
-      // teacher = (await LCQuery("Student").whereEqualTo("id", user.teacher.id))
-      //     as Teacher?;
+    if(user.clas!=null){
+      var co = await LCQuery("Clas").get(user.clas!.id);
+      user.clas = Clas.parse(co!);
     }
-    log("initUser $user");
+    // student=user.student;
+    // teacher=user.teacher;
 
-    // user.toJson();
+    log("initUser at last: $user");
+  }
+
+  Future<User> createUserDb() async {
+    var user = User();
+    var timeStr = DateFormat('yyyy-MM-dd hh:mm').format(DateTime.now());
+    user['name'] = "Jack from $timeStr";
+    // user.save()后才会生产objectID
+    await user.save();
+    return user;
   }
 
   void initDb() {
@@ -135,25 +130,37 @@ class AppModel extends ChangeNotifier {
       }
     });
 
-    initStudent();
+    // initStudent();
     // testDbAsync();
   }
 
   sendSearchRequest(String reg) {
-    // var request = SearchRequest();
-    // request.reg = reg;
-    // request.user = user;
-    // request.save();
-    var sr = LCObject("SearchRequest");
-    sr['reg'] = reg;
-    sr['user'] = user;
-    sr.save();
+    var request = SearchRequest();
+    request.reg = reg;
+    request.userId = user.id;
+    request.userName = user.name;
+    var clas = user.clas;
+    if (clas != null) {
+      request.clasId = clas.id;
+      log('clas $clas');
+      request.clasName = clas.name;
+    }
+    request.save();
+
+    // var sr = LCObject("SearchRequest");
+    // sr['reg'] = reg;
+    // sr['user'] = user;
+    // sr.save();
   }
 
-  getSearchHistory(DateTime start, DateTime end) async {
+  getSearchHistory(DateTime start, DateTime end, String? classId) async {
     var query = LCQuery("SearchRequest");
     query.whereGreaterThan('createdAt', start);
     query.whereLessThan("createdAt", end);
+    log("getSearchHistory $start $end $classId");
+    if (classId != null && classId != "") {
+      query.whereEqualTo("clasId", classId);
+    }
     query.limit(1000);
     List<LCObject>? list = await query.find();
 
@@ -185,38 +192,52 @@ class AppModel extends ChangeNotifier {
   }
 
   Future<void> testDbAsync() async {
-    initStudent();
+    // initStudent();
     var query = LCQuery("Student");
     var student = await query.first();
     print(student);
   }
 
-  void initStudent() {
-    School school = new School();
-    school.name = "school-001";
-    school.save();
-
-    Clas clas = Clas();
-    clas.school = school;
-    clas.name = "class-001";
-    clas.save();
-
-    Student student = Student();
-    student.id = "test_001";
-    student.save();
-
-    Teacher teacher = Teacher();
-    teacher.save();
-
-    User user = User();
-    user.name = "Jack1";
-    user.type = 2;
-    user.student = student;
-    user.teacher = teacher;
-    user.save();
-
-    log('init student success');
+  Future<void> setUserClass() async {
+    var co = await LCQuery("Clas").first();
+    var clas = Clas.parse(co!);
+    user.clas = clas;
+    updateUserDb('clas', co);
   }
+
+  updateUserDb(String key, dynamic value) async {
+    var obj = await LCQuery("AppUser").get(user.id ?? "");
+    obj![key] = value;
+    obj.save();
+    log("updateDb: $obj");
+  }
+
+  // void initStudent() {
+  //   School school = new School();
+  //   school.name = "school-001";
+  //   school.save();
+  //
+  //   Clas clas = Clas();
+  //   clas.school = school;
+  //   clas.name = "class-001";
+  //   clas.save();
+  //
+  //   Student student = Student();
+  //   student.id = "test_001";
+  //   student.save();
+  //
+  //   Teacher teacher = Teacher();
+  //   teacher.save();
+  //
+  //   User user = User();
+  //   user.name = "Jack1";
+  //   user.type = 2;
+  //   user.student = student;
+  //   user.teacher = teacher;
+  //   user.save();
+  //
+  //   log('init student success');
+  // }
 
   String getUserId() {
     return sp.getString("userId") ?? "";
@@ -349,6 +370,18 @@ class AppModel extends ChangeNotifier {
   }
 
   void saveQuery(String queryReg) {}
+
+  Future<List<Clas>> getClasses() async {
+    var query = LCQuery("Clas");
+    var classes = await query.find();
+    List<Clas> list = [];
+    for (var c in classes!) {
+      log("class data: $c");
+      var clas = Clas.parse(c);
+      list.add(clas);
+    }
+    return list;
+  }
 }
 
 void getAllFiles(String path, List<String> list) {

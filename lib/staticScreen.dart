@@ -3,6 +3,7 @@ import 'dart:developer';
 import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:leancloud_storage/leancloud.dart';
 
@@ -14,6 +15,7 @@ class StaticScreen extends StatefulWidget {
 }
 
 class _StaticScreenState extends State<StatefulWidget> {
+  late AppModel appModel;
   var timeClipTexts = [
     "1天",
     "7天",
@@ -21,15 +23,20 @@ class _StaticScreenState extends State<StatefulWidget> {
     "全部",
     "自定义时间",
   ];
-
+  DateTime curStarDate = DateTime.now();
+  DateTime curEndDate = DateTime.now();
   var curTimeClipIndex = 0;
-  late AppModel appModel;
+  late List<Clas> classList = [];
+
+  var curClassChipIndex = 0;
+  String? curClassId;
   Map<String, int> searchMap = {};
 
   @override
   void initState() {
     appModel = AppModel();
     super.initState();
+    loadClasses();
     onDateTabClick(0, context);
   }
 
@@ -39,6 +46,7 @@ class _StaticScreenState extends State<StatefulWidget> {
       margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
       child: Column(
         children: [
+          // date duration chips
           Wrap(
             spacing: 8,
             runSpacing: 8,
@@ -65,6 +73,35 @@ class _StaticScreenState extends State<StatefulWidget> {
             height: 8,
           ),
 
+          // class chips
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            alignment: WrapAlignment.start,
+            children: List<Widget>.generate(
+              classList.length ,
+              (int index) {
+                return ChoiceChip(
+                  label: Text(classList[index].name??""),
+                  selected: curClassChipIndex == index,
+                  onSelected: (bool selected) {
+                    if (selected) {
+                      curClassChipIndex = index;
+                      curClassId = classList[curClassChipIndex].id;
+                      querySearchHistory(curStarDate, curEndDate);
+                    }
+                    setState(() {
+
+                    });
+                  },
+                );
+              },
+            ).toList(),
+          ),
+          const SizedBox(
+            height: 8,
+          ),
+
           // ui search list
           Expanded(
             child: ListView.builder(
@@ -74,8 +111,8 @@ class _StaticScreenState extends State<StatefulWidget> {
                 itemBuilder: (context, index) => Padding(
                     padding: EdgeInsets.all(4),
                     child: Text(
-                      "${searchMap.keys.elementAt(index)} ——"
-                      " ${searchMap.values.elementAt(index)} 次",
+                      "${searchMap.keys.elementAt(index)} —— "
+                      "${searchMap.values.elementAt(index)} 次",
                     ))),
           )
         ],
@@ -94,7 +131,11 @@ class _StaticScreenState extends State<StatefulWidget> {
       } else if (index == 1) {
         start = DateTime.now().subtract(Duration(days: 7));
       } else {
-        start = DateTime.now().subtract(Duration(days: 30));
+        if(kDebugMode){
+          start = DateTime.now().subtract(Duration(minutes: 10));
+        } else {
+          start = DateTime.now().subtract(Duration(days: 30));
+        }
       }
       querySearchHistory(start, DateTime.now());
     } else if (index == 3) {
@@ -119,13 +160,35 @@ class _StaticScreenState extends State<StatefulWidget> {
   }
 
   void querySearchHistory(DateTime start, DateTime end) {
-    appModel.getSearchHistory(start, end).then((map) {
+    curStarDate=start;
+    curEndDate=end;
+    appModel.getSearchHistory(start, end, curClassId).then((map) {
       searchMap = map;
       setState(() {});
     });
   }
 
   void querySearchHistoryAll() {
-    querySearchHistory(DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
+    querySearchHistory(
+        DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
+  }
+
+  void updateUI() {
+    setState(() {});
+  }
+
+  void loadClasses() {
+    appModel.getClasses().then((list) {
+      classList = list;
+      var last = Clas();
+      last.name = "全部班级";
+      last.id = "";
+      classList.add(last);
+      // curClassId=classList[curClassChipIndex].id;
+      curClassChipIndex = classList.length-1;
+      updateUI();
+    }).catchError((onError) {
+      log("load classes error: $onError");
+    });
   }
 }

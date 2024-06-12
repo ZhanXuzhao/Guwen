@@ -70,7 +70,6 @@ class _SearchScreenState extends State<StatefulWidget> {
       showMessage("请输入搜索条件");
       return;
     }
-    appModel.sendSearchRequest(regStr);
     var startTime = DateTime.now().millisecondsSinceEpoch;
     clearPreSearchData();
 
@@ -101,6 +100,7 @@ class _SearchScreenState extends State<StatefulWidget> {
     log("search finished  $searchTotalFiles files get $searchProgress sentence");
     showExportButton = true;
     updateUI();
+    appModel.sendSearchRequest(regStr);
     // showMessage("搜索完成");
   }
 
@@ -171,7 +171,6 @@ class _SearchScreenState extends State<StatefulWidget> {
   }
 
   void updateUI() {
-    print("update ui");
     setState(() {});
   }
 
