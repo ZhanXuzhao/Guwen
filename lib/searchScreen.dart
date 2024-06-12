@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
+import 'package:f05/profileScreen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
@@ -247,177 +248,184 @@ class _SearchScreenState extends State<StatefulWidget> {
   Widget build(BuildContext context) {
     mContext = context;
 
-    return Padding(
-      padding: const EdgeInsets.only(top: 16, left: 16, right: 16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: <Widget>[
-          //搜索条件 正则表达式
-          Container(
-            height: 8,
-          ),
-          // regex row
-          Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(),
-                    hintText: '输入搜索正则表达式，如: 之.*者',
-                  ),
-                  onChanged: (value) {
-                    // appModel.setRegStr(value);
-                    print("onChange $value");
-                  },
-                  controller: regController,
-                ),
-              ),
-              // Container(
-              //   width: 8,
-              // ),
-              // ElevatedButton(
-              //   child: const Text('选择搜索范围'),
-              //   onPressed: () {
-              //     FileListPage.launch(context, textFilePath, true);
-              //   },
-              // ),
-
+    return Column(
+      children: [
+        GuwenAppBar(title: "汉语溯源"),
+        Expanded(
+            child: Container(
+          margin: EdgeInsets.symmetric(horizontal: 8),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              //搜索条件 正则表达式
               Container(
-                width: 8,
+                height: 8,
               ),
-              ElevatedButton(onPressed: searchData, child: const Text('搜索')),
-
-              // search button
-            ],
-          ),
-
-          Container(
-            height: 8,
-          ),
-
-          // search tabs 现代汉语、近代汉语、古汉语、指定文献
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.start,
-            children: List<Widget>.generate(
-              searchTabs.length,
-              (int index) {
-                return ChoiceChip(
-                  label: Text(searchTabs[index]),
-                  selected: curSearchTab == index,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      curSearchTab = selected ? index : curSearchTab;
-                      appModel.setYuliaoType(index);
-                      if (curSearchTab == searchTabs.length - 1) {
-                        FileListPage.launch(
-                            context, kDebugMode ? textFilePathDebug : "", true);
-                      }
-                    });
-                  },
-                );
-              },
-            ).toList(),
-          ),
-
-          Container(
-            height: 8,
-          ),
-
-          // example 示例
-          if (!showProgressUI)
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  "搜索说明：",
-                  style: TextStyle(color: Theme.of(context).primaryColor),
-                ),
-                Text("a..b 匹配a、b间有2个任意字符;"
-                    "\na.*b 匹配a、b间有任意个字符;"
-                    "\na.{m,n}b 匹配a、b间有m-n个字符;"
-                    "\n更多搜索语法可以百度正则表达式进行了解;"),
-                Text(
-                  "示例（可点击）：",
-                  style: TextStyle(color: Theme.of(context).primaryColor),
-                ),
-
-                // Text(
-                //   "cur path：${Directory.current.path}",
-                //   style: TextStyle(color: Theme.of(context).primaryColor),
-                // ),
-
-                Container(
-                  height: 8,
-                ),
-
-                // search example clip
-                Wrap(
-                  spacing: 8.0, // gap between adjacent chips
-                  runSpacing: 4.0, // gap between lines
-                  children: List<Widget>.generate(exampleSearchText.length,
-                      (int index) {
-                    // return Text(exampleSearchText[index]);
-                    return ActionChip(
-                      label: Text(exampleSearchText[index]),
-                      onPressed: () {
-                        regController.text = exampleSearchText[index];
+              // regex row
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        border: OutlineInputBorder(),
+                        hintText: '输入搜索正则表达式，如: 之.*者',
+                      ),
+                      onChanged: (value) {
+                        // appModel.setRegStr(value);
+                        print("onChange $value");
                       },
-                    );
-                  }),
-                )
-              ],
-            ),
-
-          // search progress row
-          if (showProgressUI)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                Text(searchProgressText),
-                Text(searchDurationText),
-                Text(searchResultStaticText),
-              ],
-            ),
-
-          const SizedBox(
-            height: 8,
-          ),
-          // DataListView(textList: searchedTextList),
-          Expanded(
-            child: Stack(
-              children: [
-                // bg, make Stack expend
-                const SizedBox(
-                  height: double.infinity,
-                  width: double.infinity,
-                  // color: Colors.green,
-                ),
-
-                // list of search result
-                Positioned.fill(
-                  child: DataListView(textList: searchedTextList),
-                ),
-
-                // export button
-                if (showExportButton)
-                  Positioned(
-                    bottom: 32,
-                    right: 32,
-                    child: FloatingActionButton(
-                      onPressed: exportSearchResult,
-                      tooltip: '下载',
-                      child: const Icon(Icons.download),
+                      controller: regController,
                     ),
                   ),
-              ],
-            ),
+                  // Container(
+                  //   width: 8,
+                  // ),
+                  // ElevatedButton(
+                  //   child: const Text('选择搜索范围'),
+                  //   onPressed: () {
+                  //     FileListPage.launch(context, textFilePath, true);
+                  //   },
+                  // ),
+
+                  Container(
+                    width: 8,
+                  ),
+                  ElevatedButton(
+                      onPressed: searchData, child: const Text('搜索')),
+
+                  // search button
+                ],
+              ),
+
+              Container(
+                height: 8,
+              ),
+
+              // search tabs 现代汉语、近代汉语、古汉语、指定文献
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: List<Widget>.generate(
+                  searchTabs.length,
+                  (int index) {
+                    return ChoiceChip(
+                      label: Text(searchTabs[index]),
+                      selected: curSearchTab == index,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          curSearchTab = selected ? index : curSearchTab;
+                          appModel.setYuliaoType(index);
+                          if (curSearchTab == searchTabs.length - 1) {
+                            FileListPage.launch(context,
+                                kDebugMode ? textFilePathDebug : "", true);
+                          }
+                        });
+                      },
+                    );
+                  },
+                ).toList(),
+              ),
+
+              Container(
+                height: 8,
+              ),
+
+              // example 示例
+              if (!showProgressUI)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "搜索说明：",
+                      style: TextStyle(color: Theme.of(context).primaryColor),
+                    ),
+                    Text("a..b 匹配a、b间有2个任意字符;"
+                        "\na.*b 匹配a、b间有任意个字符;"
+                        "\na.{m,n}b 匹配a、b间有m-n个字符;"
+                        "\n更多搜索语法可以百度正则表达式进行了解;"),
+                    Text(
+                      "示例（可点击）：",
+                      style: TextStyle(color: Theme.of(context).primaryColor),
+                    ),
+
+                    // Text(
+                    //   "cur path：${Directory.current.path}",
+                    //   style: TextStyle(color: Theme.of(context).primaryColor),
+                    // ),
+
+                    Container(
+                      height: 8,
+                    ),
+
+                    // search example clip
+                    Wrap(
+                      spacing: 8.0, // gap between adjacent chips
+                      runSpacing: 4.0, // gap between lines
+                      children: List<Widget>.generate(exampleSearchText.length,
+                          (int index) {
+                        // return Text(exampleSearchText[index]);
+                        return ActionChip(
+                          label: Text(exampleSearchText[index]),
+                          onPressed: () {
+                            regController.text = exampleSearchText[index];
+                          },
+                        );
+                      }),
+                    )
+                  ],
+                ),
+
+              // search progress row
+              if (showProgressUI)
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(searchProgressText),
+                    Text(searchDurationText),
+                    Text(searchResultStaticText),
+                  ],
+                ),
+
+              const SizedBox(
+                height: 8,
+              ),
+              // DataListView(textList: searchedTextList),
+              Expanded(
+                child: Stack(
+                  children: [
+                    // bg, make Stack expend
+                    const SizedBox(
+                      height: double.infinity,
+                      width: double.infinity,
+                      // color: Colors.green,
+                    ),
+
+                    // list of search result
+                    Positioned.fill(
+                      child: DataListView(textList: searchedTextList),
+                    ),
+
+                    // export button
+                    if (showExportButton)
+                      Positioned(
+                        bottom: 32,
+                        right: 32,
+                        child: FloatingActionButton(
+                          onPressed: exportSearchResult,
+                          tooltip: '下载',
+                          child: const Icon(Icons.download),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        )),
+      ],
     );
   }
 }
@@ -469,6 +477,5 @@ class DataListView extends StatelessWidget {
               text: textList[index],
               words: hightWords,
             )));
-
   }
 }

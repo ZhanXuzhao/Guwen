@@ -7,6 +7,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:leancloud_storage/leancloud.dart';
 
+import 'profileScreen.dart';
+
 class StaticScreen extends StatefulWidget {
   @override
   State<StatefulWidget> createState() {
@@ -42,83 +44,101 @@ class _StaticScreenState extends State<StatefulWidget> {
 
   @override
   Widget build(BuildContext context) {
-    var container = Container(
-      margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
-      child: Column(
-        children: [
-          // date duration chips
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.start,
-            children: List<Widget>.generate(
-              timeClipTexts.length,
-              (int index) {
-                return ChoiceChip(
-                  label: Text(timeClipTexts[index]),
-                  selected: curTimeClipIndex == index,
-                  onSelected: (bool selected) {
-                    setState(() {
-                      if (selected) {
-                        curTimeClipIndex = index;
-                      }
-                      onDateTabClick(curTimeClipIndex, context);
-                    });
+    return Column(
+      children: [
+        GuwenAppBar(title: "数据统计"),
+        Expanded(
+            child: Container(
+          margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text("选择统计时间范围："),
+              const SizedBox(
+                height: 8,
+              ),
+              // date duration chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: List<Widget>.generate(
+                  timeClipTexts.length,
+                  (int index) {
+                    return ChoiceChip(
+                      label: Text(timeClipTexts[index]),
+                      selected: curTimeClipIndex == index,
+                      onSelected: (bool selected) {
+                        setState(() {
+                          if (selected) {
+                            curTimeClipIndex = index;
+                          }
+                          onDateTabClick(curTimeClipIndex, context);
+                        });
+                      },
+                    );
                   },
-                );
-              },
-            ).toList(),
-          ),
-          const SizedBox(
-            height: 8,
-          ),
+                ).toList(),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
 
-          // class chips
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.start,
-            children: List<Widget>.generate(
-              classList.length ,
-              (int index) {
-                return ChoiceChip(
-                  label: Text(classList[index].name??""),
-                  selected: curClassChipIndex == index,
-                  onSelected: (bool selected) {
-                    if (selected) {
-                      curClassChipIndex = index;
-                      curClassId = classList[curClassChipIndex].id;
-                      querySearchHistory(curStarDate, curEndDate);
-                    }
-                    setState(() {
+              const Text("选择班级："),
 
-                    });
+              const SizedBox(
+                height: 8,
+              ),
+              // class chips
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                alignment: WrapAlignment.start,
+                children: List<Widget>.generate(
+                  classList.length,
+                  (int index) {
+                    return ChoiceChip(
+                      label: Text(classList[index].name ?? ""),
+                      selected: curClassChipIndex == index,
+                      onSelected: (bool selected) {
+                        if (selected) {
+                          curClassChipIndex = index;
+                          curClassId = classList[curClassChipIndex].id;
+                          querySearchHistory(curStarDate, curEndDate);
+                        }
+                        setState(() {});
+                      },
+                    );
                   },
-                );
-              },
-            ).toList(),
-          ),
-          const SizedBox(
-            height: 8,
-          ),
+                ).toList(),
+              ),
+              const SizedBox(
+                height: 8,
+              ),
 
-          // ui search list
-          Expanded(
-            child: ListView.builder(
-                // fix bug Cannot hit test a render box that has never been laid out.
-                shrinkWrap: true,
-                itemCount: searchMap.entries.length,
-                itemBuilder: (context, index) => Padding(
-                    padding: EdgeInsets.all(4),
-                    child: Text(
-                      "${searchMap.keys.elementAt(index)} —— "
-                      "${searchMap.values.elementAt(index)} 次",
-                    ))),
-          )
-        ],
-      ),
+              // ui search list
+              const Text("搜索记录统计："),
+              const SizedBox(
+                height: 8,
+              ),
+              Expanded(
+                child: ListView.builder(
+                    // fix bug Cannot hit test a render box that has never been laid out.
+                    shrinkWrap: true,
+                    itemCount: searchMap.entries.length,
+                    itemBuilder: (context, index) => Padding(
+                        padding: EdgeInsets.all(4),
+                        child: Text(
+                          "${searchMap.keys.elementAt(index)} —— "
+                          "${searchMap.values.elementAt(index)} 次",
+                        ))),
+              )
+            ],
+          ),
+        )),
+      ],
     );
-    return container;
   }
 
   void onDateTabClick(int index, BuildContext context) {
@@ -131,7 +151,7 @@ class _StaticScreenState extends State<StatefulWidget> {
       } else if (index == 1) {
         start = DateTime.now().subtract(Duration(days: 7));
       } else {
-        if(kDebugMode){
+        if (kDebugMode) {
           start = DateTime.now().subtract(Duration(minutes: 10));
         } else {
           start = DateTime.now().subtract(Duration(days: 30));
@@ -160,8 +180,8 @@ class _StaticScreenState extends State<StatefulWidget> {
   }
 
   void querySearchHistory(DateTime start, DateTime end) {
-    curStarDate=start;
-    curEndDate=end;
+    curStarDate = start;
+    curEndDate = end;
     appModel.getSearchHistory(start, end, curClassId).then((map) {
       searchMap = map;
       setState(() {});
@@ -185,7 +205,7 @@ class _StaticScreenState extends State<StatefulWidget> {
       last.id = "";
       classList.add(last);
       // curClassId=classList[curClassChipIndex].id;
-      curClassChipIndex = classList.length-1;
+      curClassChipIndex = classList.length - 1;
       updateUI();
     }).catchError((onError) {
       log("load classes error: $onError");

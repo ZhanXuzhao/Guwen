@@ -1,8 +1,6 @@
 import 'dart:developer';
 
 import 'package:f05/models.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'beans.dart';
@@ -19,14 +17,15 @@ class _ProfileScreenState extends State<StatefulWidget> {
   late List<Clas> classList = [];
   int? curClassChipIndex;
   String? curClassId;
-  bool showClassList = false;
 
   var classController = TextEditingController();
   var schoolController = TextEditingController();
 
   School? curSchool;
-
+  bool showClassList = false;
   var showSchoolList = false;
+  var showSchoolList2 = true;
+  var showClassList2 = true;
 
   @override
   void initState() {
@@ -46,16 +45,18 @@ class _ProfileScreenState extends State<StatefulWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-        margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+        margin: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           // direction: Axis.vertical,
           // spacing: 8,
           // runSpacing: 8,
           children: [
-            // SizedBox(
-            //   height: 8,
-            // ),
+            SizedBox(
+              height: 8,
+            ),
+            TitleTextWithBg(title: "用户信息"),
+
             Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -174,8 +175,13 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       log("school name can't be empty");
                       return;
                     }
+                    showSchoolList2 = false;
+                    // setState(() {});
                     appModel.createSchool(schoolName).then((v) {
                       updateUI();
+                    }).whenComplete(() {
+                      showSchoolList2 = true;
+                      setState(() {});
                     });
                   });
                 },
@@ -202,9 +208,10 @@ class _ProfileScreenState extends State<StatefulWidget> {
             const SizedBox(
               height: 8,
             ),
-            SchoolListWrap(onValueSet: (value) {
-              curSchool = value;
-            }),
+            if (showSchoolList2)
+              SchoolListWrap(onValueSet: (value) {
+                curSchool = value;
+              }),
 
             const SizedBox(
               height: 8,
@@ -247,10 +254,14 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       log("class name can't be empty");
                       return;
                     }
+                    showClassList2 = false;
                     appModel.createClass(className, curSchool).then((v) {
                       log("createClass success");
                     }).catchError((e) {
                       log("createClass fail: $e");
+                    }).whenComplete(() {
+                      showClassList2 = true;
+                      setState(() {});
                     });
                   });
                 },
@@ -263,7 +274,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
             const SizedBox(
               height: 8,
             ),
-            ClassListWrap(onClasSet: (v) {}),
+            if (showClassList2) ClassListWrap(onClasSet: (v) {}),
           ],
         ));
   }
@@ -312,6 +323,7 @@ class _SchoolWrapState extends State<SchoolListWrap> {
   late List<School> dataList = [];
   int? curIndex;
   AppModel appModel = AppModel();
+
   // ValueSetter<School> onValueSet;
 
   @override
@@ -376,10 +388,10 @@ class ClassListWrap extends StatefulWidget {
 }
 
 class _ClassListWrapState extends State<ClassListWrap> {
-
   late List<Clas> classList = [];
   int? curIndex;
   AppModel appModel = AppModel();
+
   // ValueSetter<Clas> onClasSet;
 
   @override
@@ -429,5 +441,28 @@ class _ClassListWrapState extends State<ClassListWrap> {
     }).catchError((onError) {
       log("load classes 2 error: $onError");
     });
+  }
+}
+
+class GuwenAppBar extends StatelessWidget {
+  const GuwenAppBar(
+      {super.key, required this.title, this.alignment = Alignment.center});
+
+  final String title;
+  final AlignmentGeometry alignment;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      alignment: alignment,
+      padding: const EdgeInsets.all(8),
+      color: Theme.of(context).primaryColor,
+      child: Text(
+        title,
+        style: const TextStyle(
+            color: Colors.white, fontSize: 32, fontFamily: "楷体"),
+      ),
+    );
   }
 }

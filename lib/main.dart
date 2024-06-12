@@ -79,6 +79,7 @@ class MyHomePage extends StatefulWidget {
 // home page state
 class _MyHomePageState extends State<MyHomePage> {
   BuildContext? mContext;
+
   // final regController = TextEditingController();
   // final extralPathController = TextEditingController();
   // final exportPathController = TextEditingController();
@@ -87,6 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // var assetsPath = TextFilePath;
   AppModel appModel = AppModel();
+
   // var searchedTextList = <String>[];
   // var searchProgress = 0;
   // var searchTotalFiles = 0;
@@ -160,13 +162,13 @@ class _MyHomePageState extends State<MyHomePage> {
     print('curSearchTab update: $curSearchTab');
 
     // appModel.init().then((onValue) {
-      // var rs = appModel.getRegStr();
-      // regController.text = rs == ".*" ? "" : rs;
-      // extralPathController.text = appModel.getYuliaoPath();
-      // exportPathController.text = appModel.getExportPathStr();
-      // appModel.initYuliaoType();
+    // var rs = appModel.getRegStr();
+    // regController.text = rs == ".*" ? "" : rs;
+    // extralPathController.text = appModel.getYuliaoPath();
+    // exportPathController.text = appModel.getExportPathStr();
+    // appModel.initYuliaoType();
 
-      // initDb();
+    // initDb();
     // });
     // searchData();
   }
@@ -184,13 +186,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
     print("ui build");
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-        backgroundColor: Theme.of(context).primaryColor,
-        titleTextStyle:
-            TextStyle(color: Colors.white, fontSize: 32, fontFamily: "楷体"),
-        automaticallyImplyLeading: false,
-      ),
+      // appBar: AppBar(
+      //   title: Text(widget.title),
+      //   backgroundColor: Theme.of(context).primaryColor,
+      //   titleTextStyle:
+      //       TextStyle(color: Colors.white, fontSize: 32, fontFamily: "楷体"),
+      //   automaticallyImplyLeading: false,
+      // ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
         currentIndex: navBarIndex,
@@ -219,7 +221,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
 
-
       // body: SearchScreen2(),
 
       body: [
@@ -229,11 +230,9 @@ class _MyHomePageState extends State<MyHomePage> {
         StaticScreen(),
         ProfileScreen2(),
         DebugScreen(),
-
       ][navBarIndex],
 
 // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
-
 }
