@@ -14,118 +14,54 @@ import 'package:leancloud_storage/leancloud.dart';
 // "updatedAt":"2024-06-10 15:05:28.196",
 // "intValue":123
 // }
-@JsonSerializable()
-class User extends LCObject {
-  // 由于objectID不能set，为了便于其它操作，手动设置 id = objectID
-  String? get id => this['id'];
 
-  set id(String? value) => this['id'] = value;
-
-  String get name => this['name'];
-
-  set name(String value) => this['name'] = value;
-
-  // int get type => this['type'] ?? 0;
-  //
-  // set type(int? value) => this['type'] = value;
-
-  Clas? get clas => this['clas'];
-
-  set clas(Clas? value) => this['clas'] = value;
-
-  Student? get student => this['student'];
-
-  set student(Student? value) => this['student'] = value;
-
-  Teacher? get teacher => this['teacher'];
-
-  set teacher(Teacher? value) => this['teacher'] = value;
-
-  User() : super('AppUser');
+class User {
+  // 正确初始化后不为空
+  LCObject? lco;
+  String? id;
+  String? name;
+  Clas? clas;
 
   static User parse(LCObject obj) {
     var u = User();
+    u.lco = obj;
     u.id = obj.objectId;
     u.name = obj['name'];
-    u.clas = obj['clas'];
-    u.student = obj['student'];
-    u.teacher = obj['teacher'];
+    u.clas = Clas.parse(obj['clas']);
     return u;
   }
-
-// factory User.fromJson(Map<String, dynamic> json) => _$UserFromJson(json);
-// Map<String, dynamic> toJson() => _$UserToJson(this);
 }
 
-class Student extends LCObject {
-  // equal to objectId
-  String? get id => this['id'];
-
-  set id(String? value) => this['id'] = value;
-
-  // 教务系统中的student id
-  String? get studentId => this['studentId'];
-
-  set studentId(String? value) => this['studentId'] = value;
-
-  String? get userId => this['userId'];
-
-  set userId(String? value) => this['userId'] = value;
-
-  // String get name => this['name'];
-  // set name(String value) => this['name'] = value;
-
-  Clas? get clas => this['Clas'];
-
-  set clas(Clas? value) => this['Clas'] = value;
-
-  Student() : super('Student');
-}
-
-class Teacher extends LCObject {
-  String get id => this['id'];
-
-  set id(String value) => this['id'] = value;
-
-  // String get name => this['name'];
-  // set name(String value) => this['name'] = value;
-
-  Teacher() : super('Teacher');
-}
-
-class Clas extends LCObject {
+class Clas {
   LCObject? lco;
-
-  String get id => this['id'] ?? objectId;
-
-  set id(String? value) => this['id'] = value;
-
-  String? get name => this['name'];
-
-  set name(String? value) => this['name'] = value;
-
-  School get school => this['School'];
-
-  set school(School value) => this['School'] = value;
-
-  Clas() : super('Clas');
+  String? id;
+  String? name;
+  String? schoolId;
+  String? schoolName;
 
   static Clas parse(LCObject obj) {
     Clas clas = Clas();
     clas.lco = obj;
     clas.id = obj.objectId;
     clas.name = obj['name'];
-    clas.school = obj['School'];
+    clas.schoolId = obj['schoolId'];
+    clas.schoolName = obj['schoolName'];
     return clas;
   }
 }
 
-class School extends LCObject {
-  String get name => this['name'];
+class School {
+  LCObject? lco;
+  String? id;
+  String? name;
 
-  set name(String value) => this['name'] = value;
-
-  School() : super('School');
+  static School parse(LCObject obj) {
+    School school = School();
+    school.lco = obj;
+    school.id = obj.objectId;
+    school.name = obj['name'];
+    return school;
+  }
 }
 
 class SearchRequest extends LCObject {
@@ -153,14 +89,7 @@ class SearchRequest extends LCObject {
 }
 
 class DataUtil {
-  static init() {
-    LCObject.registerSubclass<Student>('AppUser', () => User());
-    LCObject.registerSubclass<Student>('Student', () => Student());
-    LCObject.registerSubclass<Student>('Teacher', () => Teacher());
-    LCObject.registerSubclass<Student>('Clas', () => Clas());
-    LCObject.registerSubclass<Student>('School', () => School());
-    LCObject.registerSubclass<Student>('SearchRequest', () => SearchRequest());
-  }
+  static init() {}
 
   static Future<List<LCObject>?> queryStudentByName(String name) {
     LCQuery<LCObject> query = LCQuery('Student');

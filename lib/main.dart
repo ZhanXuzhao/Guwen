@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:f05/DebugScreen.dart';
 import 'package:f05/beans.dart';
 import 'package:f05/demo001.dart';
 import 'package:f05/models.dart';
@@ -211,6 +212,10 @@ class _MyHomePageState extends State<MyHomePage> {
             icon: Icon(Icons.account_circle_outlined),
             label: '我的',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.settings),
+            label: 'Test',
+          ),
         ],
       ),
 
@@ -223,6 +228,7 @@ class _MyHomePageState extends State<MyHomePage> {
         SearchScreen2(),
         StaticScreen(),
         ProfileScreen2(),
+        DebugScreen(),
 
       ][navBarIndex],
 

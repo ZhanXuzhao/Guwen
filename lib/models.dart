@@ -85,7 +85,7 @@ class AppModel extends ChangeNotifier {
       log("initUser from cloud: $user");
     }
     if (user.clas != null) {
-      var co = await LCQuery("Clas").get(user.clas!.id);
+      var co = await LCQuery("Clas").get(user.clas!.id ?? "");
       user.clas = Clas.parse(co!);
     }
     // student=user.student;
@@ -95,13 +95,19 @@ class AppModel extends ChangeNotifier {
   }
 
   Future<User> createUserDb() async {
-    var user = User();
+    var uo = LCObject("AppUser");
     var timeStr = DateFormat('yyyy-MM-dd hh:mm').format(DateTime.now());
-    user['name'] = "Jack from $timeStr";
+    uo['name'] = "Jack from $timeStr";
     // user.save()后才会生产objectID
-    await user.save();
-    initUserClass();
+    await uo.save();
+    // set user.lco
+    User user = User.parse(uo);
+    // initUserClass();
     return user;
+  }
+
+  Future<LCObject?> queryUser(String id) async {
+    return await LCQuery("AppUser").get(id);
   }
 
   void initDb() {
@@ -199,15 +205,22 @@ class AppModel extends ChangeNotifier {
     print(student);
   }
 
-  initUserClass() {
-    setUserClass(null);
-  }
+  // initUserClass() {
+  //   setUserClass(null);
+  // }
 
-  Future<void> setUserClass(LCObject? co) async {
-    co ??= await LCQuery("Clas").first();
-    var clas = Clas.parse(co!);
-    user.clas = clas;
-    await updateUserDb('clas', co);
+  Future<void> setUserClass(Clas co) async {
+    if (user.lco == null) {
+      log("setUserClass fail, user.lco is null");
+      return;
+    }
+    if (co.lco == null) {
+      log("setUserClass fail, co.lco is null");
+      return;
+    }
+    user.lco!['clas'] = co.lco;
+    user.clas=co;
+    await user.lco!.save();
   }
 
   updateUserDb(String key, dynamic value) async {
@@ -378,9 +391,10 @@ class AppModel extends ChangeNotifier {
 
   Future<List<Clas>> getClasses() async {
     var query = LCQuery("Clas");
-    var classes = await getClasLCOList();
+    query.orderByAscending('name');
+    var findResult = await query.find();
     List<Clas> list = [];
-    for (var c in classes!) {
+    for (var c in findResult!) {
       log("class data: $c");
       var clas = Clas.parse(c);
       list.add(clas);
@@ -388,10 +402,67 @@ class AppModel extends ChangeNotifier {
     return list;
   }
 
-  Future<List<LCObject>?> getClasLCOList() async {
-    var query = LCQuery("Clas");
-    var classes = await query.find();
-    return classes;
+  Future<List<School>> getSchools() async {
+    var query = LCQuery("School");
+    query.orderByAscending('name');
+    var findResult = await query.find();
+    List<School> list = [];
+    for (var i in findResult!) {
+      var clas = School.parse(i);
+      list.add(clas);
+    }
+    return list;
+  }
+
+  // Future<List<LCObject>?> getClasLCOList() async {
+  //   var query = LCQuery("Clas");
+  //   var classes = await query.find();
+  //   return classes;
+  // }
+
+  Future<void> createClass(String className, School? school) async {
+    var lco = await LCQuery("Clas").whereEqualTo('name', className).first();
+    if (lco == null) {
+      if (school == null) {
+        log("create fail, school null");
+        return;
+      }
+      var clas = LCObject('Clas');
+      clas['name'] = className;
+      clas['schoolId'] = school.id;
+      clas['schoolName'] = school.name;
+      await clas.save();
+    } else {
+      log("create fail, name duplicate");
+    }
+  }
+
+  Future<void> createSchool(String schoolName) async {
+    var school =
+        await LCQuery("School").whereEqualTo('name', schoolName).first();
+    if (school == null) {
+      school = LCObject("School");
+      school['name'] = schoolName;
+      await school.save();
+    } else {
+      log("create fail, name duplicate");
+    }
+  }
+
+  setClassSchool(Clas? clas, School school) async {
+    var className = clas?.name;
+    if (className == null) {
+      log("set fail, class name is empty");
+      return;
+    }
+    var lco = await LCQuery("Clas").whereEqualTo('name', className).first();
+    if (lco == null) {
+      log("create fail, class:$className not exist");
+    } else {
+      lco['schoolId'] = school.id;
+      lco['schoolName'] = school.name;
+      await lco.save();
+    }
   }
 }
 
