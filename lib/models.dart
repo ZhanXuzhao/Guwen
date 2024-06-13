@@ -109,8 +109,16 @@ class AppModel extends ChangeNotifier {
         }
       }
     }
+    await initUserClass();
 
     log("initUser: $userInfo");
+  }
+
+  Future<void> initUserClass() async {
+    if (userInfo.clas != null) {
+      var co = await LCQuery("Clas").get(userInfo.clas!.id ?? "");
+      userInfo.clas = Clas.parse(co!);
+    }
   }
 
   Future<void> createAnonymousUser() async {
