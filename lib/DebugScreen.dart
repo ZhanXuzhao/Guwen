@@ -38,21 +38,21 @@ class _DebugScreenState extends State<StatefulWidget> {
             runSpacing: 4,
             direction: Axis.horizontal,
             children: [
-              ElevatedButton(
-                  onPressed: () {
-                    appModel.clearCache();
-                  },
-                  child: const Text("Clear Cache")),
+              // ElevatedButton(
+              //     onPressed: () {
+              //       appModel.clearCache();
+              //     },
+              //     child: const Text("Clear Cache")),
               ElevatedButton(
                   onPressed: () {
                     appModel.initUser();
                   },
                   child: const Text("init user")),
-              // ElevatedButton(
-              //     onPressed: () {
-              //       appModel.initUserClass();
-              //     },
-              //     child: const Text("setUserClass")),
+              ElevatedButton(
+                  onPressed: () {
+                    appModel.logout();
+                  },
+                  child: const Text("logout")),
               ElevatedButton(
                   onPressed: () {
                     appModel.sendSearchRequest(

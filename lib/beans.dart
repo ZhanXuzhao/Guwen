@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:leancloud_storage/leancloud.dart';
 // part 'user.g.dart';
 
@@ -12,21 +14,50 @@ import 'package:leancloud_storage/leancloud.dart';
 // "intValue":123
 // }
 
-class User {
+class UserInfo {
   // 正确初始化后不为空
   LCObject? lco;
   String? id;
   String? name;
   Clas? clas;
-  LCUser? lcUser;
+  String? lcUserId;
 
-  static User parse(LCObject obj) {
-    var u = User();
+  static UserInfo? parse(LCObject? obj) {
+    if(obj == null){
+      return null;
+    }
+    var u = UserInfo();
     u.lco = obj;
     u.id = obj.objectId;
     u.name = obj['name'];
-    u.clas = Clas.parse(obj['clas']);
+    var lcUserObj = obj['lcUser'];
+    if (lcUserObj != null) {
+      u.lcUserId = lcUserObj['objectId'];
+    }
+    if (obj['clas'] != null) {
+      u.clas = Clas.parse(obj['clas']);
+    }
     return u;
+  }
+
+  static UserInfo? decode(String? jsonString) {
+    if(jsonString== null) {
+      return null;
+    }
+    Map<String, dynamic> data = jsonDecode(jsonString);
+    UserInfo result = new UserInfo();
+    data.forEach((String key, dynamic value) {
+      if (key == 'id') {
+        result.id = value;
+      } else if (key == 'name') {
+        result.name = value;
+      } else if (key == 'clas') {
+        result.clas = value;
+      } else if (key == 'lcUserId') {
+        result.lcUserId = value;
+      }
+    });
+    return result;
   }
 }
 

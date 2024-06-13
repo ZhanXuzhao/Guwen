@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
@@ -34,6 +35,17 @@ List<String> listDir(String path) {
 const String textFilePathDebug = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
 var innerYuliaoPathDebug = 'D:/Projects/GHY/汉语语例溯源系统库short'; // 内置预料目录列表 test
 var innerYuliaoPathRelease = '/data/yl/汉语语例溯源系统库'; // 内置预料目录列表 release
+const String spKeyUserInfo = 'sp_user_info';
+
+class DbCons {
+  static const String appId = "VK6ZRvXfLOpuaColXhtwMnMq-gzGzoHsz";
+  static const String appKey = "i99dklDAq3xbCPMU468evvhj";
+  static const String server = "https://vk6zrvxf.lc-cn-n1-shared.com";
+
+  static const String userInfoTable = "UserInfo";
+  static const String userInfoName = "name";
+  static const String userInfoLcUser = "lcUser";
+}
 
 class AppModel extends ChangeNotifier {
   static final AppModel _instance = AppModel._internal();
@@ -57,7 +69,7 @@ class AppModel extends ChangeNotifier {
 
   //student
   int? userType = 0; //0 undefine, 1 student, 2 teacher
-  late User user;
+  late UserInfo userInfo;
   LCUser? lcUser;
 
   Future<bool> init() async {
@@ -67,55 +79,117 @@ class AppModel extends ChangeNotifier {
     return true;
   }
 
-  void clearCache() {
-    cacheUserId("");
-  }
+  // void clearCache() {
+  //   cacheUserId("");
+  //   logout();
+  // }
 
   Future<void> initUser() async {
     lcUser = await LCUser.getCurrent();
-    userType = sp.getInt("user_type") ?? 0;
-    var userId = sp.getString("userId") ?? "";
-    log("initUser userId: $userId");
-    if (userId == "") {
-      user = await createUserDb();
-      cacheUserId(user.id);
-      log("initUser create: $user");
+    if (lcUser == null) {
+      // 未登录用户，创建匿名账号
+      await createAnonymousUser();
     } else {
-      var uo = (await LCQuery("AppUser").get(userId))!;
-      user = User.parse(uo);
-      log("initUser from cloud: $user");
+      // 已登录， 初始化 userInfo
+      // load sp
+      var usp = await loadUserInfoFromSp();
+      if (usp != null) {
+        userInfo = usp;
+      } else {
+        // load database
+        var uo = await LCQuery(DbCons.userInfoTable)
+            .whereEqualTo(DbCons.userInfoLcUser, lcUser)
+            .first();
+        if (uo != null) {
+          userInfo = UserInfo.parse(uo)!;
+        } else {
+          // create userInfo in database when no data there
+          userInfo = await createUserInfoInDb(lcUser: lcUser);
+          cacheUserInfoToSp(userInfo);
+        }
+      }
     }
-    if (user.clas != null) {
-      var co = await LCQuery("Clas").get(user.clas!.id ?? "");
-      user.clas = Clas.parse(co!);
-    }
-    // student=user.student;
-    // teacher=user.teacher;
-
-    log("initUser at last: $user");
   }
 
-  Future<User> createUserDb() async {
-    var uo = LCObject("AppUser");
-    var timeStr = DateFormat('yyyy-MM-dd hh:mm').format(DateTime.now());
-    uo['name'] = "Jack from $timeStr";
+  Future<void> createAnonymousUser() async {
+    lcUser = await LCUser.loginAnonymously();
+    userInfo = await createUserInfoInDb(lcUser: lcUser);
+    cacheUserInfoToSp(userInfo);
+  }
+
+  // Future<void> initUser() async {
+  //   lcUser = await LCUser.getCurrent();
+  //   userType = sp.getInt("user_type") ?? 0;
+  //   var userId = sp.getString("userId") ?? "";
+  //   log("initUser userId: $userId");
+  //   // if no user in sp, create new user
+  //   if (userId == "") {
+  //     user = await createUserInfoDb();
+  //     cacheUserId(user.id);
+  //     log("initUser create: $user");
+  //   } else {
+  //     var uo = (await LCQuery(DbCons.userInfoTable).get(userId))!;
+  //     user = UserInfo.parse(uo);
+  //     log("initUser from cloud: $user");
+  //   }
+  //   if (user.clas != null) {
+  //     var co = await LCQuery("Clas").get(user.clas!.id ?? "");
+  //     user.clas = Clas.parse(co!);
+  //   }
+  //   // student=user.student;
+  //   // teacher=user.teacher;
+  //
+  //   log("initUser at last: $user");
+  // }
+
+  Future<void> cacheUserInfoToSp(UserInfo? userInfo) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    String userData = jsonEncode(userInfo);
+    await prefs.setString(spKeyUserInfo, userData);
+  }
+
+  Future<UserInfo?> loadUserInfoFromSp() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    UserInfo? userInfo = UserInfo.decode(prefs.getString(spKeyUserInfo));
+    log(userInfo.toString());
+    return userInfo;
+  }
+
+  bool hasLogin() {
+    return lcUser != null;
+  }
+
+  bool isAnonymous() {
+    return lcUser != null && lcUser!.isAnonymous;
+  }
+
+  // Future<UserInfo> createUserInfoDb() async {
+  //   LCObject uo = await createUserInfoInDb();
+  //   UserInfo user = UserInfo.parse(uo);
+  //   return user;
+  // }
+
+  Future<UserInfo> createUserInfoInDb({String? name, LCUser? lcUser}) async {
+    var uo = LCObject(DbCons.userInfoTable);
+    if (name == null) {
+      var timeStr = DateFormat('yyyyMMddhhmm').format(DateTime.now());
+      name = "User-$timeStr";
+    }
+    uo[DbCons.userInfoName] = name;
+    uo[DbCons.userInfoLcUser] = lcUser;
     // user.save()后才会生产objectID
     await uo.save();
-    // set user.lco
-    User user = User.parse(uo);
-    // initUserClass();
+    UserInfo user = UserInfo.parse(uo)!;
     return user;
   }
 
   Future<LCObject?> queryUser(String id) async {
-    return await LCQuery("AppUser").get(id);
+    return await LCQuery(DbCons.userInfoTable).get(id);
   }
 
   void initDb() {
-    LeanCloud.initialize(
-        'VK6ZRvXfLOpuaColXhtwMnMq-gzGzoHsz', 'i99dklDAq3xbCPMU468evvhj',
-        server: 'https://vk6zrvxf.lc-cn-n1-shared.com',
-        // to use your own custom domain
+    LeanCloud.initialize(DbCons.appId, DbCons.appKey,
+        server: DbCons.server,
         queryCache: LCQueryCache() // optional, enable cache
         );
     LCLogger.setLevel(LCLogger.DebugLevel);
@@ -126,7 +200,7 @@ class AppModel extends ChangeNotifier {
     if (!test) {
       return;
     }
-    LCQuery<LCObject> query = LCQuery<LCObject>('AppUser');
+    LCQuery<LCObject> query = LCQuery<LCObject>('UserInfo');
     query.limit(10);
     query.find();
     query.find().then((list) {
@@ -145,9 +219,9 @@ class AppModel extends ChangeNotifier {
   sendSearchRequest(String reg) {
     var request = SearchRequest();
     request.reg = reg;
-    request.userId = user.id;
-    request.userName = user.name;
-    var clas = user.clas;
+    request.userId = userInfo.id;
+    request.userName = userInfo.name;
+    var clas = userInfo.clas;
     if (clas != null) {
       request.clasId = clas.id;
       log('clas $clas');
@@ -211,7 +285,7 @@ class AppModel extends ChangeNotifier {
   // }
 
   Future<void> setUserClass(Clas co) async {
-    if (user.lco == null) {
+    if (userInfo.lco == null) {
       log("setUserClass fail, user.lco is null");
       return;
     }
@@ -219,13 +293,18 @@ class AppModel extends ChangeNotifier {
       log("setUserClass fail, co.lco is null");
       return;
     }
-    user.lco!['clas'] = co.lco;
-    user.clas = co;
-    await user.lco!.save();
+    userInfo.lco!['clas'] = co.lco;
+    userInfo.clas = co;
+    await userInfo.lco!.save();
   }
 
   updateUserDb(String key, dynamic value) async {
-    var obj = await LCQuery("AppUser").get(user.id ?? "");
+    String? userInfoId = userInfo.id;
+    if (userInfoId == null || userInfoId.isEmpty) {
+      log("updateUserDb failed: id empty");
+      return;
+    }
+    var obj = await LCQuery(DbCons.userInfoTable).get(userInfoId);
     obj![key] = value;
     obj.save();
     log("updateDb: $obj");
@@ -465,13 +544,6 @@ class AppModel extends ChangeNotifier {
     }
   }
 
-  Future<void> login(String username, String password) async {
-    LCUser lcu = await LCUser.login(username, password);
-    lcUser = lcu;
-    // LCUser.getCurrent();
-    // LCUser.logout();
-  }
-
   Future<void> signUp(String email, String password) async {
     try {
       // 登录成功
@@ -480,9 +552,21 @@ class AppModel extends ChangeNotifier {
       user.password = password;
       user.email = email;
       await user.signUp();
+      initUser();
     } on LCException catch (e) {
       log('signUp fail: ${e.code} : ${e.message}');
     }
+  }
+
+  Future<void> login(String username, String password) async {
+    await LCUser.login(username, password);
+    initUser();
+  }
+
+  void logout() {
+    LCUser.logout();
+    lcUser = null;
+    cacheUserInfoToSp(null);
   }
 }
 

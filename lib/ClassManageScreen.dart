@@ -400,7 +400,7 @@ class _SchoolWrapState extends State<SchoolListWrap> {
     appModel.getSchools().then((list) {
       dataList = list;
       for (int i = 0; i < list.length; i++) {
-        if (list[i].id == appModel.user.clas?.schoolId) {
+        if (list[i].id == appModel.userInfo.clas?.schoolId) {
           curIndex = i;
           break;
         }
@@ -468,7 +468,7 @@ class _ClassListWrapState extends State<ClassListWrap> {
     appModel.getClasses().then((list) {
       classList = list;
       for (int i = 0; i < list.length; i++) {
-        if (list[i].id == (appModel.user.clas?.id)) {
+        if (list[i].id == (appModel.userInfo.clas?.id)) {
           curIndex = i;
           break;
         }
