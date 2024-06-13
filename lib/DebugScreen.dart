@@ -50,6 +50,11 @@ class _DebugScreenState extends State<StatefulWidget> {
                   child: const Text("init user")),
               ElevatedButton(
                   onPressed: () {
+                    appModel.login('649912323@qq.com', '123');
+                  },
+                  child: const Text("登录 6499")),
+              ElevatedButton(
+                  onPressed: () {
                     appModel.logout();
                   },
                   child: const Text("logout")),

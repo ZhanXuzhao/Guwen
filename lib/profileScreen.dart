@@ -158,19 +158,18 @@ class _ProfileScreenState extends State<StatefulWidget> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const TitleTextWithBg(title: "登录注册"),
-                  // TextField(
-                  //   decoration: const InputDecoration(
-                  //     border: OutlineInputBorder(),
-                  //     hintText: '用户名',
-                  //   ),
-                  //   controller: usernameController,
-                  // ),
+                  const SizedBox(
+                    height: 8,
+                  ),
                   TextField(
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       hintText: '邮箱',
                     ),
                     controller: emailController,
+                  ),
+                  const SizedBox(
+                    height: 8,
                   ),
                   TextField(
                     decoration: const InputDecoration(
@@ -186,7 +185,9 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   //   ),
                   //   controller: emailController,
                   // ),
-
+                  const SizedBox(
+                    height: 8,
+                  ),
                   Row(
                     children: [
                       ElevatedButton(
@@ -210,7 +211,9 @@ class _ProfileScreenState extends State<StatefulWidget> {
                             });
                           },
                           child: const Text("登录")),
-
+                      const SizedBox(
+                        width: 8,
+                      ),
                       // sign up
                       // 649912323@qq.com
                       ElevatedButton(
@@ -241,25 +244,10 @@ class _ProfileScreenState extends State<StatefulWidget> {
                             });
                           },
                           child: const Text("注册")),
+                      const SizedBox(
+                        width: 8,
+                      ),
 
-                      ElevatedButton(
-                          onPressed: () {
-                            appModel.login('649912323@qq.com', '123').then((v) {
-                              loginMsg = "登陆成功";
-                            }).catchError((e) {
-                              if (e is LCException) {
-                                if (e.code == 211) {
-                                  loginMsg = '账号未注册，请先完成注册';
-                                }
-                              } else {
-                                loginMsg = '登录失败 ${e.code} : ${e.message}';
-                              }
-                              showLoginMsg = true;
-                            }).whenComplete(() {
-                              setState(() {});
-                            });
-                          },
-                          child: const Text("登录 6499")),
                     ],
                   ),
                   if (showLoginMsg) Text('$loginMsg'),

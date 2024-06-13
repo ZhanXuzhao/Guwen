@@ -196,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
-            label: '搜索-',
+            label: '搜索',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.timeline),
@@ -207,11 +207,11 @@ class _MyHomePageState extends State<MyHomePage> {
             label: '我的',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.people),
+            icon: Icon(Icons.school),
             label: '校务',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
+            icon: Icon(Icons.science),
             label: 'Test',
           ),
         ],
