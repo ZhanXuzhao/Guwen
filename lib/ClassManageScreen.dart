@@ -52,80 +52,6 @@ class _ClassManageState extends State<StatefulWidget> {
           // spacing: 8,
           // runSpacing: 8,
           children: [
-            // SizedBox(
-            //   height: 8,
-            // ),
-            // TitleTextWithBg(title: "用户信息"),
-            //
-            // Wrap(
-            //   spacing: 8,
-            //   runSpacing: 8,
-            //   direction: Axis.vertical,
-            //   children: [
-            //     const Text("用户信息"),
-            //     Text("姓名: ${appModel.user.name ?? "未设置"}"),
-            //     // class
-            //     Row(
-            //       children: [
-            //         Text("班级: ${appModel.user.clas?.name ?? "未设置"}"),
-            //         const SizedBox(
-            //           width: 8,
-            //         ),
-            //         ElevatedButton(
-            //             onPressed: () {
-            //               showClassList = !showClassList;
-            //               showSchoolList = false;
-            //               setState(() {});
-            //             },
-            //             child: const Text("设置班级")),
-            //       ],
-            //     ),
-            //
-            //     // school
-            //     Row(
-            //       children: [
-            //         Text("学校: ${appModel.user.clas?.schoolName ?? "未设置"}"),
-            //         const SizedBox(
-            //           width: 8,
-            //         ),
-            //         ElevatedButton(
-            //             onPressed: () {
-            //               showSchoolList = !showSchoolList;
-            //               showClassList = false;
-            //               setState(() {});
-            //             },
-            //             child: const Text("修改班级所在学校")),
-            //       ],
-            //     ),
-            //   ],
-            // ),
-            //
-            // const SizedBox(
-            //   height: 8,
-            // ),
-            //
-            // // class list
-            // if (showClassList)
-            //   ClassListWrap(onClasSet: (clas) {
-            //     appModel.setUserClass(clas).then((_) {
-            //       showClassList = false;
-            //       setState(() {});
-            //     });
-            //   }),
-            //
-            // // school list
-            // if (showSchoolList)
-            //   SchoolListWrap(onValueSet: (value) {
-            //     appModel.setClassSchool(appModel.user.clas, value).then((_) {
-            //       showSchoolList = false;
-            //       setState(() {});
-            //
-            //       // update user.clas info and notify ui change
-            //       appModel.initUser().then((v) {
-            //         setState(() {});
-            //       });
-            //     });
-            //   }),
 
             const SizedBox(
               height: 8,
@@ -272,43 +198,6 @@ class _ClassManageState extends State<StatefulWidget> {
             if (showClassList2)
               ClassListWrap(onClasSet: (v) {}),
 
-            // TitleTextWithBg(title: "登录注册"),
-            // TextField(
-            //   decoration: const InputDecoration(
-            //     border: OutlineInputBorder(),
-            //     hintText: '邮箱',
-            //   ),
-            //   controller: classController,
-            // ),
-            // TextField(
-            //   decoration: const InputDecoration(
-            //     border: OutlineInputBorder(),
-            //     hintText: '密码',
-            //   ),
-            //   controller: classController,
-            // ),
-            // TextField(
-            //   decoration: const InputDecoration(
-            //     border: OutlineInputBorder(),
-            //     hintText: '验证码',
-            //   ),
-            //   controller: classController,
-            // ),
-            // ElevatedButton(
-            //     onPressed: () {
-            //       showClassList = !showClassList;
-            //       showSchoolList = false;
-            //       setState(() {});
-            //     },
-            //     child: const Text("登录")),
-            // ElevatedButton(
-            //     onPressed: () {
-            //       showClassList = !showClassList;
-            //       showSchoolList = false;
-            //       setState(() {});
-            //     },
-            //     child: const Text("注册")),
-            //
           ],
         ));
   }
@@ -479,28 +368,3 @@ class _ClassListWrapState extends State<ClassListWrap> {
     });
   }
 }
-
-// class GuwenAppBar extends StatelessWidget {
-//   const GuwenAppBar(
-//       {super.key, required this.title, this.alignment = Alignment.center});
-//
-//   final String title;
-//   final AlignmentGeometry alignment;
-//
-//   @override
-//   Widget build(BuildContext context) {
-//     return Container(
-//       width: double.infinity,
-//       alignment: alignment,
-//       padding: const EdgeInsets.all(8),
-//       color: Theme
-//           .of(context)
-//           .primaryColor,
-//       child: Text(
-//         title,
-//         style: const TextStyle(
-//             color: Colors.white, fontSize: 32, fontFamily: "楷体"),
-//       ),
-//     );
-//   }
-// }

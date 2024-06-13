@@ -119,10 +119,12 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text("选择学校："),
-                        SchoolListWrap(onValueSet: (value) {
-                          curSchoolId = value.id;
-                          setState(() {});
-                        }),
+                        SchoolListWrap(
+                            showEmptySchool: false,
+                            onValueSet: (value) {
+                              curSchoolId = value.id;
+                              setState(() {});
+                            }),
 
                         // class list
                         const Text("选择班级："),
@@ -285,9 +287,11 @@ class TitleTextWithBg extends StatelessWidget {
 }
 
 class SchoolListWrap extends StatefulWidget {
-  const SchoolListWrap({super.key, required this.onValueSet});
+  SchoolListWrap(
+      {super.key, required this.onValueSet, this.showEmptySchool = true});
 
   final ValueSetter<School> onValueSet;
+  bool showEmptySchool = true;
 
   @override
   State<StatefulWidget> createState() {
@@ -341,7 +345,7 @@ class _SchoolWrapState extends State<SchoolListWrap> {
   }
 
   void loadData() {
-    appModel.getSchools().then((list) {
+    appModel.getSchools(showEmptySchool: widget.showEmptySchool).then((list) {
       dataList = list;
       for (int i = 0; i < list.length; i++) {
         if (list[i].id == appModel.userInfo.clas?.schoolId) {
@@ -391,30 +395,36 @@ class _ClassListWrapState extends State<ClassListWrap> {
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      alignment: WrapAlignment.start,
-      children: List<Widget>.generate(
-        classList.length,
-        (int index) {
-          return ChoiceChip(
-            label: Text(classList[index].name ?? ""),
-            selected: curIndex == index,
-            onSelected: (bool selected) {
-              if (selected) {
-                curIndex = index;
-                // curClassId = classList[curClassChipIndex].id;
-                // querySearchHistory(curStarDate, curEndDate);
-                // var clas = classList[curIndex!].lco;
-                widget.onClasSet(classList[curIndex!]);
-              }
-              setState(() {});
+    return Column(
+      children: [
+        if (classList.length == 0) const Text('该学校未设置班级'),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          alignment: WrapAlignment.start,
+          children: List<Widget>.generate(
+            classList.length,
+            (int index) {
+              return ChoiceChip(
+                label: Text(classList[index].name ?? ""),
+                selected: curIndex == index,
+                onSelected: (bool selected) {
+                  if (selected) {
+                    curIndex = index;
+                    // curClassId = classList[curClassChipIndex].id;
+                    // querySearchHistory(curStarDate, curEndDate);
+                    // var clas = classList[curIndex!].lco;
+                    widget.onClasSet(classList[curIndex!]);
+                  }
+                  setState(() {});
+                },
+              );
             },
-          );
-        },
-      ).toList(),
+          ).toList(),
+        ),
+      ],
     );
+    ;
   }
 
   void loadClasses() {

@@ -23,7 +23,7 @@ class UserInfo {
   String? lcUserId;
 
   static UserInfo? parse(LCObject? obj) {
-    if(obj == null){
+    if (obj == null) {
       return null;
     }
     var u = UserInfo();
@@ -41,7 +41,7 @@ class UserInfo {
   }
 
   static UserInfo? decode(String? jsonString) {
-    if(jsonString== null) {
+    if (jsonString == null) {
       return null;
     }
     Map<String, dynamic> data = jsonDecode(jsonString);
@@ -83,12 +83,14 @@ class School {
   LCObject? lco;
   String? id;
   String? name;
+  int clasCount = 0;
 
   static School parse(LCObject obj) {
     School school = School();
     school.lco = obj;
     school.id = obj.objectId;
     school.name = obj['name'];
+    school.clasCount = obj['clasCount'];
     return school;
   }
 }

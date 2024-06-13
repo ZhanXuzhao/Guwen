@@ -38,11 +38,11 @@ class _DebugScreenState extends State<StatefulWidget> {
             runSpacing: 4,
             direction: Axis.horizontal,
             children: [
-              // ElevatedButton(
-              //     onPressed: () {
-              //       appModel.clearCache();
-              //     },
-              //     child: const Text("Clear Cache")),
+              ElevatedButton(
+                  onPressed: () {
+                    appModel.updateSchoolClassCount();
+                  },
+                  child: const Text("updateSchoolClassCount")),
               ElevatedButton(
                   onPressed: () {
                     appModel.initUser();

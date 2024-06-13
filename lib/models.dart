@@ -481,9 +481,12 @@ class AppModel extends ChangeNotifier {
     return list;
   }
 
-  Future<List<School>> getSchools() async {
+  Future<List<School>> getSchools({bool showEmptySchool = true}) async {
     var query = LCQuery("School");
     query.orderByAscending('name');
+    if(!showEmptySchool){
+      query.whereGreaterThan("clasCount", 0);
+    }
     var findResult = await query.find();
     List<School> list = [];
     for (var i in findResult!) {
@@ -491,6 +494,18 @@ class AppModel extends ChangeNotifier {
       list.add(clas);
     }
     return list;
+  }
+  
+  Future<void> updateSchoolClassCount() async {
+    var query = LCQuery("School");
+    query.orderByAscending('name');
+    var findResult = await query.find();
+    List<School> list = [];
+    for (var i in findResult!) {
+      var count = await LCQuery("Clas").whereEqualTo('schoolId', i.objectId).count();
+      i['clasCount'] = count;
+    }
+    LCObject.saveAll(findResult);
   }
 
   // Future<List<LCObject>?> getClasLCOList() async {
