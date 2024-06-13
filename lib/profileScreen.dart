@@ -288,8 +288,14 @@ class TitleTextWithBg extends StatelessWidget {
 
 class SchoolListWrap extends StatefulWidget {
   SchoolListWrap(
-      {super.key, required this.onValueSet, this.showEmptySchool = true});
+      {super.key,
+      this.defaultSelectIndex,
+      this.onDataLoad,
+      required this.onValueSet,
+      this.showEmptySchool = true});
 
+  int? defaultSelectIndex;
+  final ValueSetter<List<School>>? onDataLoad;
   final ValueSetter<School> onValueSet;
   bool showEmptySchool = true;
 
@@ -312,6 +318,7 @@ class _SchoolWrapState extends State<SchoolListWrap> {
 
   @override
   void initState() {
+    curIndex = widget.defaultSelectIndex;
     loadData();
     super.initState();
   }
@@ -347,6 +354,9 @@ class _SchoolWrapState extends State<SchoolListWrap> {
   void loadData() {
     appModel.getSchools(showEmptySchool: widget.showEmptySchool).then((list) {
       dataList = list;
+      if (widget.onDataLoad != null) {
+        widget.onDataLoad!(list);
+      }
       for (int i = 0; i < list.length; i++) {
         if (list[i].id == appModel.userInfo.clas?.schoolId) {
           curIndex = i;
@@ -361,10 +371,15 @@ class _SchoolWrapState extends State<SchoolListWrap> {
 }
 
 class ClassListWrap extends StatefulWidget {
-  ClassListWrap({super.key, this.schoolId, required this.onClasSet});
+  ClassListWrap(
+      {super.key,
+      this.schoolId,
+      this.newUpdateTime = 0,
+      required this.onClasSet});
 
   final ValueSetter<Clas> onClasSet;
   String? schoolId;
+  int newUpdateTime = 0;
 
   @override
   State<StatefulWidget> createState() {
@@ -376,6 +391,7 @@ class _ClassListWrapState extends State<ClassListWrap> {
   late List<Clas> classList = [];
   int? curIndex;
   AppModel appModel = AppModel();
+  int lastUpdateTime = 0;
 
   // ValueSetter<Clas> onClasSet;
 
@@ -388,8 +404,10 @@ class _ClassListWrapState extends State<ClassListWrap> {
   @override
   void didUpdateWidget(covariant ClassListWrap oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.schoolId != widget.schoolId) {
+    var needUpdate = widget.newUpdateTime > lastUpdateTime;
+    if (needUpdate || oldWidget.schoolId != widget.schoolId) {
       loadClasses();
+      lastUpdateTime = DateTime.now().millisecondsSinceEpoch;
     }
   }
 
@@ -397,7 +415,11 @@ class _ClassListWrapState extends State<ClassListWrap> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        if (classList.length == 0) const Text('该学校未设置班级'),
+        if (classList.isEmpty)
+          if (widget.schoolId == null)
+            const Text('未选择学校')
+          else
+            const Text('该学校未设置班级'),
         Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -424,10 +446,14 @@ class _ClassListWrapState extends State<ClassListWrap> {
         ),
       ],
     );
-    ;
   }
 
   void loadClasses() {
+    if (widget.schoolId == null) {
+      classList = [];
+      setState(() {});
+      return;
+    }
     appModel.getClasses(schoolId: widget.schoolId).then((list) {
       classList = list;
       for (int i = 0; i < list.length; i++) {

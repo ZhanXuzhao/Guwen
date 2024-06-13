@@ -41,7 +41,7 @@ class UserInfo {
   }
 
   static UserInfo? decode(String? jsonString) {
-    if (jsonString == null) {
+    if (jsonString == null || jsonString=="null") {
       return null;
     }
     Map<String, dynamic> data = jsonDecode(jsonString);
@@ -90,7 +90,7 @@ class School {
     school.lco = obj;
     school.id = obj.objectId;
     school.name = obj['name'];
-    school.clasCount = obj['clasCount'];
+    school.clasCount = obj['clasCount'] ?? 0;
     return school;
   }
 }

@@ -109,6 +109,8 @@ class AppModel extends ChangeNotifier {
         }
       }
     }
+
+    log("initUser: $userInfo");
   }
 
   Future<void> createAnonymousUser() async {
@@ -145,13 +147,14 @@ class AppModel extends ChangeNotifier {
   Future<void> cacheUserInfoToSp(UserInfo? userInfo) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userData = jsonEncode(userInfo);
+    log("cacheUserInfoToSp $userData");
     await prefs.setString(spKeyUserInfo, userData);
   }
 
   Future<UserInfo?> loadUserInfoFromSp() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     UserInfo? userInfo = UserInfo.decode(prefs.getString(spKeyUserInfo));
-    log(userInfo.toString());
+    log("loadUserInfoFromSp $userInfo");
     return userInfo;
   }
 
@@ -484,7 +487,7 @@ class AppModel extends ChangeNotifier {
   Future<List<School>> getSchools({bool showEmptySchool = true}) async {
     var query = LCQuery("School");
     query.orderByAscending('name');
-    if(!showEmptySchool){
+    if (!showEmptySchool) {
       query.whereGreaterThan("clasCount", 0);
     }
     var findResult = await query.find();
@@ -495,14 +498,14 @@ class AppModel extends ChangeNotifier {
     }
     return list;
   }
-  
+
   Future<void> updateSchoolClassCount() async {
     var query = LCQuery("School");
     query.orderByAscending('name');
     var findResult = await query.find();
-    List<School> list = [];
     for (var i in findResult!) {
-      var count = await LCQuery("Clas").whereEqualTo('schoolId', i.objectId).count();
+      var count =
+          await LCQuery("Clas").whereEqualTo('schoolId', i.objectId).count();
       i['clasCount'] = count;
     }
     LCObject.saveAll(findResult);
@@ -515,12 +518,16 @@ class AppModel extends ChangeNotifier {
   // }
 
   Future<void> createClass(String className, School? school) async {
-    var lco = await LCQuery("Clas").whereEqualTo('name', className).first();
+    var query = LCQuery("Clas");
+    query.whereEqualTo('name', className);
+    if (school == null) {
+      log("create fail, school null");
+      throw Exception("未选择学校");
+    } else {
+      query.whereEqualTo('schoolId', school.id);
+    }
+    var lco = await query.first();
     if (lco == null) {
-      if (school == null) {
-        log("create fail, school null");
-        return;
-      }
       var clas = LCObject('Clas');
       clas['name'] = className;
       clas['schoolId'] = school.id;
@@ -528,6 +535,7 @@ class AppModel extends ChangeNotifier {
       await clas.save();
     } else {
       log("create fail, name duplicate");
+      throw Exception("已存在同名班级");
     }
   }
 
@@ -540,6 +548,7 @@ class AppModel extends ChangeNotifier {
       await school.save();
     } else {
       log("create fail, name duplicate");
+      throw Exception("已存在同名学校");
     }
   }
 
