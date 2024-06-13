@@ -386,9 +386,12 @@ class AppModel extends ChangeNotifier {
 
   void saveQuery(String queryReg) {}
 
-  Future<List<Clas>> getClasses() async {
+  Future<List<Clas>> getClasses({String? schoolId}) async {
     var query = LCQuery("Clas");
     query.orderByAscending('name');
+    if (schoolId != null && schoolId.isNotEmpty) {
+      query.whereEqualTo("schoolId", schoolId);
+    }
     var findResult = await query.find();
     List<Clas> list = [];
     for (var c in findResult!) {
@@ -463,12 +466,11 @@ class AppModel extends ChangeNotifier {
   }
 
   Future<void> login(String username, String password) async {
-      LCUser lcu = await LCUser.login(username, password);
-      lcUser = lcu;
-      // LCUser.getCurrent();
-      // LCUser.logout();
+    LCUser lcu = await LCUser.login(username, password);
+    lcUser = lcu;
+    // LCUser.getCurrent();
+    // LCUser.logout();
   }
-
 
   Future<void> signUp(String email, String password) async {
     try {

@@ -37,6 +37,10 @@ class _ProfileScreenState extends State<StatefulWidget> {
   var showLoginMsg = false;
   var loginMsg = "";
 
+  var curSchoolId;
+
+  // SchoolIdSteam schoolIdSteam = SchoolIdSteam();
+
   @override
   void initState() {
     appModel = AppModel();
@@ -54,7 +58,8 @@ class _ProfileScreenState extends State<StatefulWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return
+      Container(
         margin: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,12 +67,12 @@ class _ProfileScreenState extends State<StatefulWidget> {
           // spacing: 8,
           // runSpacing: 8,
           children: [
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             TitleTextWithBg(title: "用户信息"),
 
-            SizedBox(
+            const SizedBox(
               height: 8,
             ),
             Wrap(
@@ -77,23 +82,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
               children: [
                 Text("账户: ${appModel.lcUser?.email ?? "未登录"}"),
                 Text("姓名: ${appModel.user.name ?? "未设置"}"),
-                // school
-                // Row(
-                //   children: [
-                //     Text("学校: ${appModel.user.clas?.schoolName ?? "未设置"}"),
-                //     const SizedBox(
-                //       width: 8,
-                //     ),
-                //     ElevatedButton(
-                //         onPressed: () {
-                //           showSchoolList = !showSchoolList;
-                //           showClassList = false;
-                //           setState(() {});
-                //         },
-                //         child: const Text("修改学校")),
-                //   ],
-                // ),
-
+                Text("学校: ${appModel.user.clas?.schoolName ?? "未设置"}"),
                 Row(
                   children: [
                     Text("班级: ${appModel.user.clas?.name ?? "未设置"}"),
@@ -116,7 +105,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
               height: 8,
             ),
 
-            // school list
+            // school and class
             if (showClassList)
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,25 +115,21 @@ class _ProfileScreenState extends State<StatefulWidget> {
                     appModel
                         .setClassSchool(appModel.user.clas, value)
                         .then((_) {
-                      // showSchoolList = false;
+                      curSchoolId = value.id;
                       setState(() {});
-
-                      // update user.clas info and notify ui change
-                      appModel.initUser().then((v) {
-                        setState(() {});
-                      });
                     });
                   }),
-                  // class
 
                   // class list
-                  Text("选择班级："),
-                  ClassListWrap(onClasSet: (clas) {
-                    appModel.setUserClass(clas).then((_) {
-                      showClassList = false;
-                      setState(() {});
-                    });
-                  }),
+                  const Text("选择班级："),
+                  ClassListWrap(
+                      schoolId: curSchoolId,
+                      onClasSet: (clas) {
+                        appModel.setUserClass(clas).then((_) {
+                          showClassList = false;
+                          setState(() {});
+                        });
+                      }),
                 ],
               ),
 
@@ -342,9 +327,10 @@ class _SchoolWrapState extends State<SchoolListWrap> {
 }
 
 class ClassListWrap extends StatefulWidget {
-  const ClassListWrap({super.key, required this.onClasSet});
+  ClassListWrap({super.key, this.schoolId, required this.onClasSet});
 
   final ValueSetter<Clas> onClasSet;
+  String? schoolId;
 
   @override
   State<StatefulWidget> createState() {
@@ -363,6 +349,14 @@ class _ClassListWrapState extends State<ClassListWrap> {
   void initState() {
     loadClasses();
     super.initState();
+  }
+
+  @override
+  void didUpdateWidget(covariant ClassListWrap oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.schoolId != widget.schoolId) {
+      loadClasses();
+    }
   }
 
   @override
@@ -394,7 +388,7 @@ class _ClassListWrapState extends State<ClassListWrap> {
   }
 
   void loadClasses() {
-    appModel.getClasses().then((list) {
+    appModel.getClasses(schoolId: widget.schoolId).then((list) {
       classList = list;
       for (int i = 0; i < list.length; i++) {
         if (list[i].id == (appModel.user.clas?.id)) {

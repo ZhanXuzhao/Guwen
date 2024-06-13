@@ -765,6 +765,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.1.2"
+  stream_mixin:
+    dependency: "direct main"
+    description:
+      name: stream_mixin
+      sha256: "6761f1098c03c7f4a087ae192583d7ddb421dd54e22091261f02cc2a7669c757"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.0.4"
   stream_transform:
     dependency: transitive
     description:
