@@ -6,7 +6,6 @@ import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:leancloud_storage/leancloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
 
 import 'beans.dart';
 
@@ -59,6 +58,7 @@ class AppModel extends ChangeNotifier {
   //student
   int? userType = 0; //0 undefine, 1 student, 2 teacher
   late User user;
+  LCUser? lcUser;
 
   Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
@@ -72,6 +72,7 @@ class AppModel extends ChangeNotifier {
   }
 
   Future<void> initUser() async {
+    lcUser = await LCUser.getCurrent();
     userType = sp.getInt("user_type") ?? 0;
     var userId = sp.getString("userId") ?? "";
     log("initUser userId: $userId");
@@ -115,7 +116,7 @@ class AppModel extends ChangeNotifier {
         'VK6ZRvXfLOpuaColXhtwMnMq-gzGzoHsz', 'i99dklDAq3xbCPMU468evvhj',
         server: 'https://vk6zrvxf.lc-cn-n1-shared.com',
         // to use your own custom domain
-        queryCache: new LCQueryCache() // optinoal, enable cache
+        queryCache: LCQueryCache() // optional, enable cache
         );
     LCLogger.setLevel(LCLogger.DebugLevel);
     DataUtil.init();
@@ -125,7 +126,7 @@ class AppModel extends ChangeNotifier {
     if (!test) {
       return;
     }
-    LCQuery<LCObject> query = new LCQuery<LCObject>('AppUser');
+    LCQuery<LCObject> query = LCQuery<LCObject>('AppUser');
     query.limit(10);
     query.find();
     query.find().then((list) {
@@ -202,7 +203,7 @@ class AppModel extends ChangeNotifier {
     // initStudent();
     var query = LCQuery("Student");
     var student = await query.first();
-    print(student);
+    log(student.toString());
   }
 
   // initUserClass() {
@@ -219,7 +220,7 @@ class AppModel extends ChangeNotifier {
       return;
     }
     user.lco!['clas'] = co.lco;
-    user.clas=co;
+    user.clas = co;
     await user.lco!.save();
   }
 
@@ -298,7 +299,7 @@ class AppModel extends ChangeNotifier {
 
   // 设置语料类型
   void setYuliaoType(int type) {
-    print("set yuliao type: $type");
+    log("set yuliao type: $type");
     curYuliaoType = type;
     selectedFiles.clear();
     var path = "";
@@ -333,9 +334,7 @@ class AppModel extends ChangeNotifier {
     return exportPath;
   }
 
-  /**
-   * 增加选中的文件或目录
-   */
+  /// 增加选中的文件或目录
   void add(String path, {bool notify = true}) {
     if (!contains(path)) {
       selectedFiles.add(path);
@@ -350,9 +349,7 @@ class AppModel extends ChangeNotifier {
     // notifyListeners();
   }
 
-  /**
-   * 移除选中的文件或目录
-   */
+  /// 移除选中的文件或目录
   void remove(String path, {bool notify = true}) {
     selectedFiles.remove(path);
     if (isDir(path)) {
@@ -462,6 +459,27 @@ class AppModel extends ChangeNotifier {
       lco['schoolId'] = school.id;
       lco['schoolName'] = school.name;
       await lco.save();
+    }
+  }
+
+  Future<void> login(String username, String password) async {
+      LCUser lcu = await LCUser.login(username, password);
+      lcUser = lcu;
+      // LCUser.getCurrent();
+      // LCUser.logout();
+  }
+
+
+  Future<void> signUp(String email, String password) async {
+    try {
+      // 登录成功
+      LCUser user = LCUser();
+      user.username = email;
+      user.password = password;
+      user.email = email;
+      await user.signUp();
+    } on LCException catch (e) {
+      log('signUp fail: ${e.code} : ${e.message}');
     }
   }
 }

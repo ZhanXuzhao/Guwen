@@ -2,6 +2,7 @@ import 'dart:developer';
 
 import 'package:f05/models.dart';
 import 'package:flutter/material.dart';
+import 'package:leancloud_storage/leancloud.dart';
 
 import 'beans.dart';
 
@@ -21,11 +22,20 @@ class _ProfileScreenState extends State<StatefulWidget> {
   var classController = TextEditingController();
   var schoolController = TextEditingController();
 
+  // login controller
+  var usernameController = TextEditingController();
+  var passwordController = TextEditingController();
+  var emailController = TextEditingController();
+  var verifyCodeController = TextEditingController();
+
   School? curSchool;
   bool showClassList = false;
   var showSchoolList = false;
   var showSchoolList2 = true;
   var showClassList2 = true;
+
+  var showLoginMsg = false;
+  var loginMsg = "";
 
   @override
   void initState() {
@@ -57,14 +67,33 @@ class _ProfileScreenState extends State<StatefulWidget> {
             ),
             TitleTextWithBg(title: "用户信息"),
 
+            SizedBox(
+              height: 8,
+            ),
             Wrap(
               spacing: 8,
               runSpacing: 8,
               direction: Axis.vertical,
               children: [
-                const Text("用户信息"),
+                Text("账户: ${appModel.lcUser?.email ?? "未登录"}"),
                 Text("姓名: ${appModel.user.name ?? "未设置"}"),
-                // class
+                // school
+                // Row(
+                //   children: [
+                //     Text("学校: ${appModel.user.clas?.schoolName ?? "未设置"}"),
+                //     const SizedBox(
+                //       width: 8,
+                //     ),
+                //     ElevatedButton(
+                //         onPressed: () {
+                //           showSchoolList = !showSchoolList;
+                //           showClassList = false;
+                //           setState(() {});
+                //         },
+                //         child: const Text("修改学校")),
+                //   ],
+                // ),
+
                 Row(
                   children: [
                     Text("班级: ${appModel.user.clas?.name ?? "未设置"}"),
@@ -77,24 +106,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                           showSchoolList = false;
                           setState(() {});
                         },
-                        child: const Text("设置班级")),
-                  ],
-                ),
-
-                // school
-                Row(
-                  children: [
-                    Text("学校: ${appModel.user.clas?.schoolName ?? "未设置"}"),
-                    const SizedBox(
-                      width: 8,
-                    ),
-                    ElevatedButton(
-                        onPressed: () {
-                          showSchoolList = !showSchoolList;
-                          showClassList = false;
-                          setState(() {});
-                        },
-                        child: const Text("修改班级所在学校")),
+                        child: const Text("修改班级")),
                   ],
                 ),
               ],
@@ -104,28 +116,37 @@ class _ProfileScreenState extends State<StatefulWidget> {
               height: 8,
             ),
 
-            // class list
-            if (showClassList)
-              ClassListWrap(onClasSet: (clas) {
-                appModel.setUserClass(clas).then((_) {
-                  showClassList = false;
-                  setState(() {});
-                });
-              }),
-
             // school list
-            if (showSchoolList)
-              SchoolListWrap(onValueSet: (value) {
-                appModel.setClassSchool(appModel.user.clas, value).then((_) {
-                  showSchoolList = false;
-                  setState(() {});
+            if (showClassList)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("选择学校："),
+                  SchoolListWrap(onValueSet: (value) {
+                    appModel
+                        .setClassSchool(appModel.user.clas, value)
+                        .then((_) {
+                      // showSchoolList = false;
+                      setState(() {});
 
-                  // update user.clas info and notify ui change
-                  appModel.initUser().then((v) {
-                    setState(() {});
-                  });
-                });
-              }),
+                      // update user.clas info and notify ui change
+                      appModel.initUser().then((v) {
+                        setState(() {});
+                      });
+                    });
+                  }),
+                  // class
+
+                  // class list
+                  Text("选择班级："),
+                  ClassListWrap(onClasSet: (clas) {
+                    appModel.setUserClass(clas).then((_) {
+                      showClassList = false;
+                      setState(() {});
+                    });
+                  }),
+                ],
+              ),
 
             const SizedBox(
               height: 8,
@@ -134,147 +155,91 @@ class _ProfileScreenState extends State<StatefulWidget> {
             // create school
             // const Text("创建学校"),
 
-            TitleTextWithBg(
-              title: "创建学校",
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            // cr
-            Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '输入学校名称',
-                    ),
-                    onChanged: (value) {
-                      // appModel.setRegStr(value);
-                      print("onChange $value");
-                    },
-                    controller: schoolController,
-                  ),
-                ),
-
-                Container(
-                  width: 8,
-                ),
-
-                // search button
-              ],
-            ),
-            const SizedBox(
-              height: 8,
-            ),
-            ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    var schoolName = schoolController.text;
-                    if (schoolName.isEmpty) {
-                      log("school name can't be empty");
-                      return;
-                    }
-                    showSchoolList2 = false;
-                    // setState(() {});
-                    appModel.createSchool(schoolName).then((v) {
-                      updateUI();
-                    }).whenComplete(() {
-                      showSchoolList2 = true;
-                      setState(() {});
-                    });
-                  });
-                },
-                child: const Text("创建学校")),
-            const SizedBox(
-              height: 32,
-            ),
-
-            // create class
-            Container(
-              width: double.infinity,
-              padding: EdgeInsets.all(8),
-              child: const Text(
-                "创建班级",
-                style: TextStyle(color: Colors.white, fontSize: 16),
+            const TitleTextWithBg(title: "登录注册"),
+            // TextField(
+            //   decoration: const InputDecoration(
+            //     border: OutlineInputBorder(),
+            //     hintText: '用户名',
+            //   ),
+            //   controller: usernameController,
+            // ),
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: '邮箱',
               ),
-              color: Theme.of(context).primaryColor,
+              controller: emailController,
             ),
-
-            const SizedBox(
-              height: 8,
+            TextField(
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: '密码',
+              ),
+              controller: passwordController,
             ),
-            const Text("学校列表：（点击设为班级所在学校）"),
-            const SizedBox(
-              height: 8,
-            ),
-            if (showSchoolList2)
-              SchoolListWrap(onValueSet: (value) {
-                curSchool = value;
-              }),
-
-            const SizedBox(
-              height: 8,
-            ),
+            // TextField(
+            //   decoration: const InputDecoration(
+            //     border: OutlineInputBorder(),
+            //     hintText: '邮箱',
+            //   ),
+            //   controller: emailController,
+            // ),
 
             Row(
               children: [
-                Expanded(
-                  child: TextField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '输入班级名称',
-                    ),
-                    onChanged: (value) {
-                      // appModel.setRegStr(value);
-                      print("onChange $value");
+                ElevatedButton(
+                    onPressed: () {
+                      appModel
+                          .login(emailController.text, passwordController.text)
+                          .then((v) {
+                        loginMsg = "登陆成功";
+                      }).catchError((e) {
+                        if (e is LCException) {
+                          if (e.code == 211) {
+                            loginMsg = '账号未注册，请先完成注册';
+                          }
+                        } else {
+                          loginMsg = '登录失败 ${e.code} : ${e.message}';
+                        }
+                        showLoginMsg = true;
+                      }).whenComplete(() {
+                        setState(() {});
+                      });
                     },
-                    controller: classController,
-                  ),
-                ),
-                //
-                // ClassListWrap(onClasSet: (clas){
-                //
-                // }),
-                Container(
-                  width: 8,
-                ),
+                    child: const Text("登录")),
 
-                // search button
+                // sign up
+                // 649912323@qq.com
+                ElevatedButton(
+                    onPressed: () {
+                      appModel
+                          .signUp(emailController.text, passwordController.text)
+                          .then((v) {
+                        loginMsg = "注册成功，请完成邮箱验证，之后即可正常登录";
+                      }).catchError((e) {
+                        // 如果收到 202 错误码，意味着已经存在使用同一 username 的账号，
+                        // 此时应提示用户换一个用户名。
+                        // 除此之外，每个用户的 email 和 mobilePhoneNumber 也需要保持唯一性，
+                        // 否则会收到 203 或 214 错误。
+                        // 可以考虑在注册时把用户的 username 设为与 email 相同，
+                        // 这样用户可以直接 用邮箱重置密码。
+                        if (e is LCException) {
+                          if (e.code == 202) {
+                            loginMsg = "该邮箱已注册";
+                          }
+                        } else {
+                          log("login fail: $e");
+                          loginMsg = e;
+                        }
+                        showLoginMsg = true;
+                      }).whenComplete(() {
+                        setState(() {});
+                      });
+                    },
+                    child: const Text("注册")),
               ],
             ),
-            const SizedBox(
-              height: 8,
-            ),
-            ElevatedButton(
-                onPressed: () {
-                  setState(() {
-                    var className = classController.text;
-                    if (className.isEmpty) {
-                      log("class name can't be empty");
-                      return;
-                    }
-                    showClassList2 = false;
-                    appModel.createClass(className, curSchool).then((v) {
-                      log("createClass success");
-                    }).catchError((e) {
-                      log("createClass fail: $e");
-                    }).whenComplete(() {
-                      showClassList2 = true;
-                      setState(() {});
-                    });
-                  });
-                },
-                child: const Text("创建班级")),
-            const SizedBox(
-              height: 8,
-            ),
-
-            const Text("班级列表："),
-            const SizedBox(
-              height: 8,
-            ),
-            if (showClassList2) ClassListWrap(onClasSet: (v) {}),
+            if (showLoginMsg) Text('$loginMsg'),
           ],
         ));
   }

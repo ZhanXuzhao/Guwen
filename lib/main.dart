@@ -1,20 +1,12 @@
 // ignore_for_file: prefer_const_constructors, avoid_print
 
-import 'dart:convert';
-import 'dart:developer';
 import 'dart:io';
 
+import 'package:f05/ClassManageScreen.dart';
 import 'package:f05/DebugScreen.dart';
-import 'package:f05/beans.dart';
-import 'package:f05/demo001.dart';
 import 'package:f05/models.dart';
 import 'package:f05/searchScreen.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:highlight_text/highlight_text.dart';
-import 'package:intl/intl.dart';
-import 'package:leancloud_storage/leancloud.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
@@ -215,6 +207,10 @@ class _MyHomePageState extends State<MyHomePage> {
             label: '我的',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.people),
+            label: '校务',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.settings),
             label: 'Test',
           ),
@@ -229,6 +225,7 @@ class _MyHomePageState extends State<MyHomePage> {
         SearchScreen2(),
         StaticScreen(),
         ProfileScreen2(),
+        ClassManageScreen(),
         DebugScreen(),
       ][navBarIndex],
 

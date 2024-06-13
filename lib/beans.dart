@@ -1,6 +1,3 @@
-import 'dart:developer';
-
-import 'package:json_annotation/json_annotation.dart';
 import 'package:leancloud_storage/leancloud.dart';
 // part 'user.g.dart';
 
@@ -21,6 +18,7 @@ class User {
   String? id;
   String? name;
   Clas? clas;
+  LCUser? lcUser;
 
   static User parse(LCObject obj) {
     var u = User();
