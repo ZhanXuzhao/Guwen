@@ -121,6 +121,14 @@ class _ProfileScreenState extends State<StatefulWidget> {
                         Text("选择学校："),
                         SchoolListWrap(
                             showEmptySchool: false,
+                            onDataLoad: (list) {
+                              // if (list.isNotEmpty) {
+                              //   curSchoolId = list.first.id;
+                              //   setState(() {
+                              //
+                              //   });
+                              // }
+                            },
                             onValueSet: (value) {
                               curSchoolId = value.id;
                               setState(() {});
@@ -357,12 +365,12 @@ class _SchoolWrapState extends State<SchoolListWrap> {
       if (widget.onDataLoad != null) {
         widget.onDataLoad!(list);
       }
-      for (int i = 0; i < list.length; i++) {
-        if (list[i].id == appModel.userInfo.clas?.schoolId) {
-          curIndex = i;
-          break;
-        }
-      }
+      // for (int i = 0; i < list.length; i++) {
+      //   if (list[i].id == appModel.userInfo.clas?.schoolId) {
+      //     curIndex = i;
+      //     break;
+      //   }
+      // }
       setState(() {});
     }).catchError((onError) {
       log("load schools error: $onError");
@@ -456,12 +464,12 @@ class _ClassListWrapState extends State<ClassListWrap> {
     }
     appModel.getClasses(schoolId: widget.schoolId).then((list) {
       classList = list;
-      for (int i = 0; i < list.length; i++) {
-        if (list[i].id == (appModel.userInfo.clas?.id)) {
-          curIndex = i;
-          break;
-        }
-      }
+      // for (int i = 0; i < list.length; i++) {
+      //   if (list[i].id == (appModel.userInfo.clas?.id)) {
+      //     curIndex = i;
+      //     break;
+      //   }
+      // }
       setState(() {});
     }).catchError((onError) {
       log("load classes 2 error: $onError");
