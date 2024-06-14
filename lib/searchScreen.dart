@@ -50,177 +50,6 @@ class _SearchScreenState extends State<StatefulWidget> {
   var navBarIndex = 0;
 
   @override
-  void dispose() {
-    regController.dispose();
-    extralPathController.dispose();
-    exportPathController.dispose();
-    // appModel.dispose();
-    super.dispose();
-  }
-
-  Future<void> searchData() async {
-    showExportButton = false;
-    var hasReg = processSearchReg();
-    if (!hasReg) {
-      clearPreSearchData();
-      showProgressUI = false;
-      updateUI();
-      showMessage("请输入搜索条件");
-      return;
-    }
-    var startTime = DateTime.now().millisecondsSinceEpoch;
-    clearPreSearchData();
-
-    // ex path
-    var txtList = filterTextFiles(appModel.getAllTxtFile());
-
-    searchTotalFiles = txtList.length;
-    searchProgress = 0;
-    for (var element in txtList) {
-      var readResult = await readFile(element);
-      print(readResult);
-
-      searchProgress++;
-
-      // 搜索进度 cal time cost
-      showProgressUI = true;
-      var endTime = DateTime.now().millisecondsSinceEpoch;
-      double timeCost = 1.0 * (endTime - startTime) / 1000;
-      searchDurationText = "耗时: $timeCost s";
-      // var percent = NumberFormat("###.#", "en_US")
-      //     .format(100 * searchProgress / searchTotalFiles);
-      searchProgressText = "搜索进度: $searchProgress/$searchTotalFiles";
-      searchResultStaticText =
-          "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
-
-      updateUI();
-    }
-    log("search finished  $searchTotalFiles files get $searchProgress sentence");
-    showExportButton = true;
-    updateUI();
-    appModel.sendSearchRequest(regStr);
-    // showMessage("搜索完成");
-  }
-
-  void clearPreSearchData() {
-    searchDurationText = "";
-    searchedTextList.clear();
-  }
-
-  Future<String> readFile(String path) async {
-    print("read file: $path");
-    File file = File(path);
-    Stream<String> lines = file
-        .openRead()
-        .transform(utf8.decoder) // Decode bytes to UTF-8.
-        .transform(const LineSplitter()); // Convert stream to individual lines.
-    try {
-      await for (var longLine in lines) {
-        var subLines = longLine.split(RegExp('。'));
-        for (var line in subLines) {
-          bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
-          // bool isMatch = exp.hasMatch(line);
-
-          if (isMatch) {
-            // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
-            var fileName = getFileDirLocation(file.path);
-            // 消除绝对路径的父路径
-            if (kReleaseMode) {
-              fileName = fileName.replaceFirst(
-                  "${Directory.current.path}$innerYuliaoPathRelease\\", "");
-            } else {
-              fileName = fileName.replaceFirst("$innerYuliaoPathDebug\\", "");
-            }
-            // 消除路径中的数字、小数点
-            fileName = fileName.replaceAll(RegExp("\\d|\\.|.txt"), "");
-            // basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
-            var s = "$line —— $fileName";
-            searchedTextList.add(s);
-            // print('line: $line');
-          }
-          totalLineCount++;
-        }
-      }
-      print('File is now closed.');
-      // updateUI();
-    } catch (e) {
-      print('Error: $e');
-      return "fail: $e";
-    }
-    return "success";
-  }
-
-  String getFileDirLocation(String filePath) {
-    for (var rootPath in appModel.externalDirs) {
-      filePath = filePath.replaceAll(rootPath, "");
-    }
-    return filePath;
-  }
-
-  void showMessage(String msg) {
-    var snackBar = SnackBar(
-      content: Text(msg),
-    );
-    if (mContext == null) {
-      print('mContext is null');
-    } else {
-      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
-    }
-  }
-
-  void updateUI() {
-    setState(() {});
-  }
-
-  bool processSearchReg() {
-    regStr = regController.text;
-    appModel.setRegStr(regStr);
-    if (regStr == "") {
-      // regStr = ".*";
-      print('no search regex');
-      return false;
-    } else {
-      // appModel.setRegStr(regStr);
-    }
-    exp = RegExp(regStr);
-    var rs = regStr.replaceAll(RegExp('[^\u4e00-\u9fa5]+'), ",");
-    // var hanziList = rs.split(RegExp(',+'));
-    var hanziList = rs.split(',');
-    appModel.highlightWords = hanziList;
-    return true;
-  }
-
-  void exportSearchResult() async {
-    var dp = (await getApplicationDocumentsDirectory()).path;
-    var path = '$dp\\古汉语搜索结果';
-    var dir = Directory(path);
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
-
-    // appModel.setExportPath(path);
-    var file = File("$path/${getExportFileName()}.txt");
-    file.create(recursive: true);
-    print('export file $file');
-    for (var line in searchedTextList) {
-      // print('write $line');
-      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
-      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
-    }
-
-    print('export success');
-    showMessage("导出成功 $path");
-  }
-
-  String getExportFileName() {
-    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    var hws = appModel.highlightWords.join("_");
-
-    var s = "${timeStr}_$hws";
-    return s;
-  }
-
-  @override
   void initState() {
     super.initState();
     print('main init state');
@@ -234,10 +63,16 @@ class _SearchScreenState extends State<StatefulWidget> {
       extralPathController.text = appModel.getYuliaoPath();
       exportPathController.text = appModel.getExportPathStr();
       appModel.initYuliaoType();
-
-      // initDb();
     });
-    // searchData();
+  }
+
+  @override
+  void dispose() {
+    regController.dispose();
+    extralPathController.dispose();
+    exportPathController.dispose();
+    // appModel.dispose();
+    super.dispose();
   }
 
   //page build
@@ -424,6 +259,168 @@ class _SearchScreenState extends State<StatefulWidget> {
         )),
       ],
     );
+  }
+
+  Future<void> searchData() async {
+    showExportButton = false;
+    var hasReg = processSearchReg();
+    if (!hasReg) {
+      clearPreSearchData();
+      showProgressUI = false;
+      updateUI();
+      showMessage("请输入搜索条件");
+      return;
+    }
+    var startTime = DateTime.now().millisecondsSinceEpoch;
+    clearPreSearchData();
+
+    // ex path
+    var txtList = filterTextFiles(appModel.getAllTxtFile());
+
+    searchTotalFiles = txtList.length;
+    searchProgress = 0;
+    for (var element in txtList) {
+      var readResult = await readFile(element);
+      print(readResult);
+
+      searchProgress++;
+
+      // 搜索进度 cal time cost
+      showProgressUI = true;
+      var endTime = DateTime.now().millisecondsSinceEpoch;
+      double timeCost = 1.0 * (endTime - startTime) / 1000;
+      searchDurationText = "耗时: $timeCost s";
+      // var percent = NumberFormat("###.#", "en_US")
+      //     .format(100 * searchProgress / searchTotalFiles);
+      searchProgressText = "搜索进度: $searchProgress/$searchTotalFiles";
+      searchResultStaticText =
+          "匹配句数: ${searchedTextList.length} \t 总句数: $totalLineCount";
+
+      updateUI();
+    }
+    log("search finished  $searchTotalFiles files get $searchProgress sentence");
+    showExportButton = true;
+    updateUI();
+    appModel.sendSearchRequest(regStr);
+    // showMessage("搜索完成");
+  }
+
+  void clearPreSearchData() {
+    searchDurationText = "";
+    searchedTextList.clear();
+  }
+
+  Future<String> readFile(String path) async {
+    print("read file: $path");
+    File file = File(path);
+    Stream<String> lines = file
+        .openRead()
+        .transform(utf8.decoder) // Decode bytes to UTF-8.
+        .transform(const LineSplitter()); // Convert stream to individual lines.
+    try {
+      await for (var longLine in lines) {
+        var subLines = longLine.split(RegExp('。'));
+        for (var line in subLines) {
+          bool isMatch = exp.hasMatch(line) && !badLineReg.hasMatch(line);
+          // bool isMatch = exp.hasMatch(line);
+
+          if (isMatch) {
+            // print("reg $regStr ${exp.hasMatch(line)} $lineIndex");
+            var fileName = getFileDirLocation(file.path);
+            // 消除绝对路径的父路径
+            if (kReleaseMode) {
+              fileName = fileName.replaceFirst(
+                  "${Directory.current.path}$innerYuliaoPathRelease\\", "");
+            } else {
+              fileName = fileName.replaceFirst("$innerYuliaoPathDebug\\", "");
+            }
+            // 消除路径中的数字、小数点
+            fileName = fileName.replaceAll(RegExp("\\d|\\.|.txt"), "");
+            // basename(file.path).replaceAll(RegExp("\\d|.txt"), "");
+            var s = "$line —— $fileName";
+            searchedTextList.add(s);
+            // print('line: $line');
+          }
+          totalLineCount++;
+        }
+      }
+      print('File is now closed.');
+      // updateUI();
+    } catch (e) {
+      print('Error: $e');
+      return "fail: $e";
+    }
+    return "success";
+  }
+
+  String getFileDirLocation(String filePath) {
+    for (var rootPath in appModel.externalDirs) {
+      filePath = filePath.replaceAll(rootPath, "");
+    }
+    return filePath;
+  }
+
+  void showMessage(String msg) {
+    var snackBar = SnackBar(
+      content: Text(msg),
+    );
+    if (mContext == null) {
+      print('mContext is null');
+    } else {
+      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
+    }
+  }
+
+  void updateUI() {
+    setState(() {});
+  }
+
+  bool processSearchReg() {
+    regStr = regController.text;
+    appModel.setRegStr(regStr);
+    if (regStr == "") {
+      // regStr = ".*";
+      print('no search regex');
+      return false;
+    } else {
+      // appModel.setRegStr(regStr);
+    }
+    exp = RegExp(regStr);
+    var rs = regStr.replaceAll(RegExp('[^\u4e00-\u9fa5]+'), ",");
+    // var hanziList = rs.split(RegExp(',+'));
+    var hanziList = rs.split(',');
+    appModel.highlightWords = hanziList;
+    return true;
+  }
+
+  void exportSearchResult() async {
+    var dp = (await getApplicationDocumentsDirectory()).path;
+    var path = '$dp\\古汉语搜索结果';
+    var dir = Directory(path);
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
+
+    // appModel.setExportPath(path);
+    var file = File("$path/${getExportFileName()}.txt");
+    file.create(recursive: true);
+    print('export file $file');
+    for (var line in searchedTextList) {
+      // print('write $line');
+      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
+    }
+
+    print('export success');
+    showMessage("导出成功 $path");
+  }
+
+  String getExportFileName() {
+    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var hws = appModel.highlightWords.join("_");
+
+    var s = "${timeStr}_$hws";
+    return s;
   }
 }
 
