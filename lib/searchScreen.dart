@@ -41,7 +41,7 @@ class _SearchScreenState extends State<StatefulWidget> {
   var searchDurationText = "";
   var exampleSearchText = ['之', '之.者', '之.*者', '之.{1,4}者'];
   int? curSearchTab = 0;
-  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
+  var searchTabs = ["古代汉语", "现代汉语", "近代报刊", "指定文献", "国学大师", "汉字全息资源应用系统"];
   var showExportButton = false;
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
@@ -82,7 +82,35 @@ class _SearchScreenState extends State<StatefulWidget> {
 
     return Column(
       children: [
-        const GuwenAppBar(title: "汉语溯源"),
+        Stack(
+          children: [
+            const GuwenAppBar(title: "汉语溯源"),
+            Positioned(
+                top: 0,
+                left: 0,
+                bottom: 0,
+                child: Row(
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.home_outlined,
+                        color: Colors.white,
+                        size: 24.0,
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(
+                        Icons.account_circle_outlined,
+                        color: Colors.white,
+                        size: 24.0,
+                      ),
+                    ),
+                  ],
+                )),
+          ],
+        ),
         Expanded(
             child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8),
@@ -99,34 +127,34 @@ class _SearchScreenState extends State<StatefulWidget> {
                 children: [
                   Expanded(
                     child: TextField(
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '输入搜索正则表达式，如: 之.*者',
+                        suffixIcon: regController.text.length > 0
+                            ? IconButton(
+                                icon: Icon(
+                                  Icons.clear_outlined,
+                                  color: Colors.black54,
+                                ),
+                                onPressed: () {
+                                  regController.clear();
+                                  showProgressUI = false;
+                                  setState(() {});
+                                },
+                              )
+                            : null,
                       ),
                       onChanged: (value) {
-                        // appModel.setRegStr(value);
-                        print("onChange $value");
+                        setState(() {});
                       },
                       controller: regController,
                     ),
                   ),
-                  // Container(
-                  //   width: 8,
-                  // ),
-                  // ElevatedButton(
-                  //   child: const Text('选择搜索范围'),
-                  //   onPressed: () {
-                  //     FileListPage.launch(context, textFilePath, true);
-                  //   },
-                  // ),
-
                   Container(
                     width: 8,
                   ),
                   ElevatedButton(
                       onPressed: searchData, child: const Text('搜索')),
-
-                  // search button
                 ],
               ),
 
@@ -203,6 +231,9 @@ class _SearchScreenState extends State<StatefulWidget> {
                           label: Text(exampleSearchText[index]),
                           onPressed: () {
                             regController.text = exampleSearchText[index];
+                            setState(() {
+
+                            });
                           },
                         );
                       }),
@@ -225,35 +256,36 @@ class _SearchScreenState extends State<StatefulWidget> {
                 height: 8,
               ),
               // DataListView(textList: searchedTextList),
-              Expanded(
-                child: Stack(
-                  children: [
-                    // bg, make Stack expend
-                    const SizedBox(
-                      height: double.infinity,
-                      width: double.infinity,
-                      // color: Colors.green,
-                    ),
-
-                    // list of search result
-                    Positioned.fill(
-                      child: DataListView(textList: searchedTextList),
-                    ),
-
-                    // export button
-                    if (showExportButton)
-                      Positioned(
-                        bottom: 32,
-                        right: 32,
-                        child: FloatingActionButton(
-                          onPressed: exportSearchResult,
-                          tooltip: '下载',
-                          child: const Icon(Icons.download),
-                        ),
+              if (showProgressUI)
+                Expanded(
+                  child: Stack(
+                    children: [
+                      // bg, make Stack expend
+                      const SizedBox(
+                        height: double.infinity,
+                        width: double.infinity,
+                        // color: Colors.green,
                       ),
-                  ],
+
+                      // list of search result
+                      Positioned.fill(
+                        child: DataListView(textList: searchedTextList),
+                      ),
+
+                      // export button
+                      if (showExportButton)
+                        Positioned(
+                          bottom: 32,
+                          right: 32,
+                          child: FloatingActionButton(
+                            onPressed: exportSearchResult,
+                            tooltip: '下载',
+                            child: const Icon(Icons.download),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
-              ),
             ],
           ),
         )),
