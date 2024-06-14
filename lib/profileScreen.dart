@@ -7,6 +7,8 @@ import 'package:leancloud_storage/leancloud.dart';
 import 'beans.dart';
 
 class ProfileScreen2 extends StatefulWidget {
+  const ProfileScreen2({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _ProfileScreenState();
@@ -74,7 +76,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   const SizedBox(
                     height: 8,
                   ),
-                  TitleTextWithBg(title: "用户信息"),
+                  const TitleTextWithBg(title: "用户信息"),
 
                   const SizedBox(
                     height: 8,
@@ -118,7 +120,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text("选择学校："),
+                        const Text("选择学校："),
                         SchoolListWrap(
                             showEmptySchool: false,
                             onDataLoad: (list) {
@@ -250,7 +252,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
 
                     ],
                   ),
-                  if (showLoginMsg) Text('$loginMsg'),
+                  if (showLoginMsg) Text(loginMsg),
                 ],
               )),
           ],

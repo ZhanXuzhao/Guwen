@@ -7,6 +7,8 @@ import 'beans.dart';
 import 'profileScreen.dart';
 
 class ClassManageScreen extends StatefulWidget {
+  const ClassManageScreen({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _ClassManageState();
@@ -61,7 +63,7 @@ class _ClassManageState extends State<StatefulWidget> {
             // create school
             // const Text("创建学校"),
 
-            TitleTextWithBg(
+            const TitleTextWithBg(
               title: "创建学校",
             ),
             const SizedBox(
@@ -125,12 +127,12 @@ class _ClassManageState extends State<StatefulWidget> {
             // create class
             Container(
               width: double.infinity,
-              padding: EdgeInsets.all(8),
+              padding: const EdgeInsets.all(8),
+              color: Theme.of(context).primaryColor,
               child: const Text(
                 "创建班级",
                 style: TextStyle(color: Colors.white, fontSize: 16),
               ),
-              color: Theme.of(context).primaryColor,
             ),
 
             const SizedBox(

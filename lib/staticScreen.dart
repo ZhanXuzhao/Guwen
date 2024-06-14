@@ -2,14 +2,14 @@ import 'dart:developer';
 
 import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:leancloud_storage/leancloud.dart';
 
 import 'profileScreen.dart';
 
 class StaticScreen extends StatefulWidget {
+  const StaticScreen({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _StaticScreenState();
@@ -46,7 +46,7 @@ class _StaticScreenState extends State<StatefulWidget> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        GuwenAppBar(title: "数据统计"),
+        const GuwenAppBar(title: "数据统计"),
         Expanded(
             child: Container(
           margin: const EdgeInsets.fromLTRB(8, 8, 8, 0),
@@ -128,7 +128,7 @@ class _StaticScreenState extends State<StatefulWidget> {
                     shrinkWrap: true,
                     itemCount: searchMap.entries.length,
                     itemBuilder: (context, index) => Padding(
-                        padding: EdgeInsets.all(4),
+                        padding: const EdgeInsets.all(4),
                         child: Text(
                           "${searchMap.keys.elementAt(index)} —— "
                           "${searchMap.values.elementAt(index)} 次",
@@ -147,14 +147,14 @@ class _StaticScreenState extends State<StatefulWidget> {
       // DateTime dateTime = DateTime.now().add(Duration(days: 30));
 
       if (index == 0) {
-        start = DateTime.now().subtract(Duration(days: 1));
+        start = DateTime.now().subtract(const Duration(days: 1));
       } else if (index == 1) {
-        start = DateTime.now().subtract(Duration(days: 7));
+        start = DateTime.now().subtract(const Duration(days: 7));
       } else {
         if (kDebugMode) {
-          start = DateTime.now().subtract(Duration(minutes: 10));
+          start = DateTime.now().subtract(const Duration(minutes: 10));
         } else {
-          start = DateTime.now().subtract(Duration(days: 30));
+          start = DateTime.now().subtract(const Duration(days: 30));
         }
       }
       querySearchHistory(start, DateTime.now());

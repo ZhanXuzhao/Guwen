@@ -712,8 +712,8 @@ class _PlaceScreenState extends State<PlaceScreen> {
                       MaterialButton(
                         onPressed: () {},
                         padding: EdgeInsets.zero,
-                        child: Row(
-                          children: const [
+                        child: const Row(
+                          children: [
                             Text(
                               'Show more',
                               style: TextStyle(
@@ -1715,9 +1715,9 @@ class ExploreScreen extends StatelessWidget {
         SliverList(
           delegate: SliverChildListDelegate(
             [
-              Column(
+              const Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
+                children: [
                   SizedBox(height: 32),
                   SectionTitle(text: 'Explore nearby'),
                   SizedBox(height: 24),

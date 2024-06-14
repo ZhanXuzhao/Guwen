@@ -1,10 +1,11 @@
 import 'dart:math' as math;
 
 import 'package:f05/models.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 class DebugScreen extends StatefulWidget {
+  const DebugScreen({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _DebugScreenState();

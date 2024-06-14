@@ -45,7 +45,7 @@ class UserInfo {
       return null;
     }
     Map<String, dynamic> data = jsonDecode(jsonString);
-    UserInfo result = new UserInfo();
+    UserInfo result = UserInfo();
     data.forEach((String key, dynamic value) {
       if (key == 'id') {
         result.id = value;

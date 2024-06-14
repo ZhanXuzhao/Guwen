@@ -2,16 +2,13 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
-import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
 import 'package:f05/profileScreen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
-import 'package:leancloud_storage/leancloud.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
 
 import 'dir_list.dart';
 
@@ -116,7 +113,7 @@ class _SearchScreenState extends State<StatefulWidget> {
     Stream<String> lines = file
         .openRead()
         .transform(utf8.decoder) // Decode bytes to UTF-8.
-        .transform(LineSplitter()); // Convert stream to individual lines.
+        .transform(const LineSplitter()); // Convert stream to individual lines.
     try {
       await for (var longLine in lines) {
         var subLines = longLine.split(RegExp('。'));
@@ -130,9 +127,9 @@ class _SearchScreenState extends State<StatefulWidget> {
             // 消除绝对路径的父路径
             if (kReleaseMode) {
               fileName = fileName.replaceFirst(
-                  Directory.current.path + innerYuliaoPathRelease + "\\", "");
+                  "${Directory.current.path}$innerYuliaoPathRelease\\", "");
             } else {
-              fileName = fileName.replaceFirst(innerYuliaoPathDebug + "\\", "");
+              fileName = fileName.replaceFirst("$innerYuliaoPathDebug\\", "");
             }
             // 消除路径中的数字、小数点
             fileName = fileName.replaceAll(RegExp("\\d|\\.|.txt"), "");
@@ -250,10 +247,10 @@ class _SearchScreenState extends State<StatefulWidget> {
 
     return Column(
       children: [
-        GuwenAppBar(title: "汉语溯源"),
+        const GuwenAppBar(title: "汉语溯源"),
         Expanded(
             child: Container(
-          margin: EdgeInsets.symmetric(horizontal: 8),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +264,7 @@ class _SearchScreenState extends State<StatefulWidget> {
                 children: [
                   Expanded(
                     child: TextField(
-                      decoration: InputDecoration(
+                      decoration: const InputDecoration(
                         border: OutlineInputBorder(),
                         hintText: '输入搜索正则表达式，如: 之.*者',
                       ),
@@ -342,7 +339,7 @@ class _SearchScreenState extends State<StatefulWidget> {
                       "搜索说明：",
                       style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
-                    Text("a..b 匹配a、b间有2个任意字符;"
+                    const Text("a..b 匹配a、b间有2个任意字符;"
                         "\na.*b 匹配a、b间有任意个字符;"
                         "\na.{m,n}b 匹配a、b间有m-n个字符;"
                         "\n更多搜索语法可以百度正则表达式进行了解;"),
@@ -442,7 +439,7 @@ class DataListView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print("build text list view1");
-    var highlightTextStyle = TextStyle(
+    var highlightTextStyle = const TextStyle(
       // You can set the general style, like a Text()
       // fontSize: 20.0,
       color: Colors.red,
@@ -472,7 +469,7 @@ class DataListView extends StatelessWidget {
         shrinkWrap: true,
         itemCount: textList.length,
         itemBuilder: (context, index) => Padding(
-            padding: EdgeInsets.all(4),
+            padding: const EdgeInsets.all(4),
             child: TextHighlight(
               text: textList[index],
               words: hightWords,
