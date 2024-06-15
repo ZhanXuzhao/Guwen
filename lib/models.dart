@@ -48,7 +48,9 @@ class DbCons {
 }
 
 class AppModel extends ChangeNotifier {
+  static final AppModel instance = _instance;
   static final AppModel _instance = AppModel._internal();
+  List<AppModelCallbacks> _AppModelListeners = [];
 
   factory AppModel() {
     return _instance;
@@ -79,11 +81,6 @@ class AppModel extends ChangeNotifier {
     return true;
   }
 
-  // void clearCache() {
-  //   cacheUserId("");
-  //   logout();
-  // }
-
   Future<void> initUser() async {
     lcUser = await LCUser.getCurrent();
     if (lcUser == null) {
@@ -97,7 +94,7 @@ class AppModel extends ChangeNotifier {
         userInfo = usp;
       } else {
         // load database
-        var uo = await LCQuery(DbCons.userInfoTable)
+        var uo = await LCQuery(UserInfo.TABLE)
             .whereEqualTo(DbCons.userInfoLcUser, lcUser)
             .first();
         if (uo != null) {
@@ -127,31 +124,6 @@ class AppModel extends ChangeNotifier {
     cacheUserInfoToSp(userInfo);
   }
 
-  // Future<void> initUser() async {
-  //   lcUser = await LCUser.getCurrent();
-  //   userType = sp.getInt("user_type") ?? 0;
-  //   var userId = sp.getString("userId") ?? "";
-  //   log("initUser userId: $userId");
-  //   // if no user in sp, create new user
-  //   if (userId == "") {
-  //     user = await createUserInfoDb();
-  //     cacheUserId(user.id);
-  //     log("initUser create: $user");
-  //   } else {
-  //     var uo = (await LCQuery(DbCons.userInfoTable).get(userId))!;
-  //     user = UserInfo.parse(uo);
-  //     log("initUser from cloud: $user");
-  //   }
-  //   if (user.clas != null) {
-  //     var co = await LCQuery("Clas").get(user.clas!.id ?? "");
-  //     user.clas = Clas.parse(co!);
-  //   }
-  //   // student=user.student;
-  //   // teacher=user.teacher;
-  //
-  //   log("initUser at last: $user");
-  // }
-
   Future<void> cacheUserInfoToSp(UserInfo? userInfo) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     String userData = jsonEncode(userInfo);
@@ -166,10 +138,6 @@ class AppModel extends ChangeNotifier {
     return userInfo;
   }
 
-  bool hasLogin() {
-    return lcUser != null;
-  }
-
   bool isAnonymous() {
     return lcUser != null && lcUser!.isAnonymous;
   }
@@ -181,7 +149,7 @@ class AppModel extends ChangeNotifier {
   // }
 
   Future<UserInfo> createUserInfoInDb({String? name, LCUser? lcUser}) async {
-    var uo = LCObject(DbCons.userInfoTable);
+    var uo = LCObject(UserInfo.TABLE);
     if (name == null) {
       var timeStr = DateFormat('yyyyMMddhhmm').format(DateTime.now());
       name = "User-$timeStr";
@@ -194,9 +162,9 @@ class AppModel extends ChangeNotifier {
     return user;
   }
 
-  Future<LCObject?> queryUser(String id) async {
-    return await LCQuery(DbCons.userInfoTable).get(id);
-  }
+  // Future<LCObject?> queryUser(String id) async {
+  //   return await LCQuery(UserInfo.TABLE).get(id);
+  // }
 
   void initDb() {
     LeanCloud.initialize(DbCons.appId, DbCons.appKey,
@@ -309,13 +277,8 @@ class AppModel extends ChangeNotifier {
     await userInfo.lco!.save();
   }
 
-  updateUserDb(String key, dynamic value) async {
-    String? userInfoId = userInfo.id;
-    if (userInfoId == null || userInfoId.isEmpty) {
-      log("updateUserDb failed: id empty");
-      return;
-    }
-    var obj = await LCQuery(DbCons.userInfoTable).get(userInfoId);
+  _updateUserDb(String key, dynamic value) async {
+    var obj = await LCQuery(UserInfo.TABLE).get(userInfo.id!);
     obj![key] = value;
     obj.save();
     log("updateDb: $obj");
@@ -609,13 +572,110 @@ class AppModel extends ChangeNotifier {
   Future<void> login(String username, String password) async {
     await LCUser.login(username, password);
     initUser();
+    for(var l in _AppModelListeners){
+      l.onLogin();
+    }
   }
 
   void logout() {
     LCUser.logout();
     lcUser = null;
     cacheUserInfoToSp(null);
+    for (var l in _AppModelListeners) {
+      l.onLogout();
+    }
   }
+
+  Future<void> createStaffApplications(int targetType) async {
+    // set old application as timeout
+    // updateStaffApplications(lcUser!.objectId, 3);
+    var result = await LCQuery(StaffApplication.TABLE)
+        .whereEqualTo("userId", lcUser!.objectId)
+        .find();
+    if (result != null) {
+      for (var obj in result) {
+        obj['status'] = 3;
+      }
+      LCObject.saveAll(result);
+    }
+
+    // create new application
+    var v = LCObject(StaffApplication.TABLE);
+    v['userId'] = lcUser!.objectId;
+    v['name'] = userInfo.name;
+    v['email'] = lcUser!.email ?? "";
+    v['targetType'] = targetType;
+    v['status'] = 0;
+    v.save();
+  }
+
+  // status 1 approved, 2 deny, 3 timeout
+  Future<void> updateStaffApplications(String? appId, int status) async {
+    if (appId == null) {
+      return;
+    }
+    var obj = await LCQuery(StaffApplication.TABLE).get(appId);
+    if (obj == null) {
+      return;
+    }
+
+    obj['status'] = status;
+    obj.save();
+
+    var app = StaffApplication.parse(obj);
+    var lcUser = await LCUser.getQuery().get(app.userId!);
+    if (status == 1) {
+      var userInfo =
+          await LCQuery(UserInfo.TABLE).whereEqualTo('lcUser', lcUser).first();
+      // UserInfo.parse(obj);
+      if (userInfo == null) {
+        return;
+      }
+      userInfo['type'] = app.targetType;
+      userInfo.save();
+    }
+  }
+
+  Future<List<StaffApplication>> loadStaffApplications() async {
+    var query = LCQuery(StaffApplication.TABLE);
+    query.whereEqualTo('status', 0);
+    var results = await query.find();
+    List<StaffApplication> list = [];
+    if (results != null) {
+      for (var i in results) {
+        list.add(StaffApplication.parse(i));
+      }
+    }
+    return list;
+  }
+
+  Future<void> updateUsername(String text) async {
+    await _updateUserDb('name', text);
+    userInfo.name = text;
+  }
+
+  Future<void> updateUserType(int type) async {
+    await _updateUserDb('type', type);
+  }
+
+  bool hasLogin() {
+    return lcUser != null && !lcUser!.isAnonymous;
+  }
+
+  void registerCallback(AppModelCallbacks cb) {
+    _AppModelListeners.add(cb);
+  }
+
+  void unregisterCallback(AppModelCallbacks cb) {
+    _AppModelListeners.remove(cb);
+  }
+}
+
+abstract class AppModelCallbacks {
+// mixin AppModelCallbacks {
+  void onLogout();
+
+  void onLogin();
 }
 
 void getAllFiles(String path, List<String> list) {

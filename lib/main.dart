@@ -6,6 +6,7 @@ import 'package:f05/ClassManageScreen.dart';
 import 'package:f05/DebugScreen.dart';
 import 'package:f05/models.dart';
 import 'package:f05/searchScreen.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -69,32 +70,25 @@ class MyHomePage extends StatefulWidget {
 }
 
 // home page state
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
   BuildContext? mContext;
 
-  // final regController = TextEditingController();
-  // final extralPathController = TextEditingController();
-  // final exportPathController = TextEditingController();
-
-  // var regStr = "";
-
-  // var assetsPath = TextFilePath;
   AppModel appModel = AppModel();
-
-  // var searchedTextList = <String>[];
-  // var searchProgress = 0;
-  // var searchTotalFiles = 0;
-  // var totalLineCount = 0;
-  // bool showProgressUI = false;
-  // var searchProgressText = "";
-  // var searchResultStaticText = "";
-  // var searchDurationText = "";
-  // var exampleSearchText = ['之', '之.者', '之.*者', '之.{1,4}者'];
-
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
   late RegExp exp;
 
-  var navBarIndex = 0;
+  int? curSearchTab = 0;
+
+  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
+
+  // var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
+  var curNavBarIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    appModel.registerCallback(this);
+  }
 
   @override
   void dispose() {
@@ -103,73 +97,6 @@ class _MyHomePageState extends State<MyHomePage> {
     // exportPathController.dispose();
     super.dispose();
   }
-
-  void showMessage(String msg) {
-    var snackBar = SnackBar(
-      content: Text(msg),
-    );
-    if (mContext == null) {
-      print('mContext is null');
-    } else {
-      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
-    }
-  }
-
-  // void exportSearchResult() async {
-  //   var dp = (await getApplicationDocumentsDirectory()).path;
-  //   var path = '$dp\\古汉语搜索结果';
-  //   var dir = Directory(path);
-  //   if (!dir.existsSync()) {
-  //     dir.createSync(recursive: true);
-  //   }
-  //
-  //   // appModel.setExportPath(path);
-  //   var file = File("$path/${getExportFileName()}.txt");
-  //   file.create(recursive: true);
-  //   print('export file $file');
-  //   for (var line in searchedTextList) {
-  //     // print('write $line');
-  //     file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
-  //     // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
-  //   }
-  //
-  //   print('export success');
-  //   showMessage("导出成功 $path");
-  // }
-
-  // String getExportFileName() {
-  //   var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-  //   var hws = appModel.highlightWords.join("_");
-  //
-  //   var s = "${timeStr}_$hws";
-  //   return s;
-  // }
-
-  @override
-  void initState() {
-    super.initState();
-    print('main init state');
-    print('curSearchTab: $curSearchTab');
-    // curSearchTab = appModel.curYuliaoType;
-    print('curSearchTab update: $curSearchTab');
-
-    // appModel.init().then((onValue) {
-    // var rs = appModel.getRegStr();
-    // regController.text = rs == ".*" ? "" : rs;
-    // extralPathController.text = appModel.getYuliaoPath();
-    // exportPathController.text = appModel.getExportPathStr();
-    // appModel.initYuliaoType();
-
-    // initDb();
-    // });
-    // searchData();
-  }
-
-  int? curSearchTab = 0;
-
-  var searchTabs = ["古代汉语", "近代汉语", "现代汉语", "指定文献"];
-
-  // var searchTabs = ["古代汉语", "近代报刊", "现代汉语", "外部文献", "指定文献"];
 
   //page build
   @override
@@ -187,33 +114,36 @@ class _MyHomePageState extends State<MyHomePage> {
       // ),
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        currentIndex: navBarIndex,
+        currentIndex: curNavBarIndex,
         onTap: (index) {
           setState(() {
-            navBarIndex = index;
+            curNavBarIndex = index;
           });
         },
-        items: const [
+        items: [
           BottomNavigationBarItem(
             icon: Icon(Icons.search),
             label: '搜索',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.timeline),
-            label: '统计',
-          ),
+          if (appModel.hasLogin())
+            BottomNavigationBarItem(
+              icon: Icon(Icons.timeline),
+              label: '统计',
+            ),
+          if (appModel.hasLogin())
+            BottomNavigationBarItem(
+              icon: Icon(Icons.school),
+              label: '校务',
+            ),
           BottomNavigationBarItem(
             icon: Icon(Icons.account_circle_outlined),
             label: '我的',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.school),
-            label: '校务',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.science),
-            label: 'Test',
-          ),
+          if (kDebugMode)
+            BottomNavigationBarItem(
+              icon: Icon(Icons.science),
+              label: 'Debug',
+            ),
         ],
       ),
 
@@ -223,13 +153,36 @@ class _MyHomePageState extends State<MyHomePage> {
         //
         // const SearchScreen2(),
         SearchScreen2(),
-        StaticScreen(),
+        if (appModel.hasLogin()) StaticScreen(),
+        if (appModel.hasLogin()) ClassManageScreen(),
         ProfileScreen2(),
-        ClassManageScreen(),
-        DebugScreen(),
-      ][navBarIndex],
+        if (kDebugMode) DebugScreen(),
+      ][curNavBarIndex],
 
 // This trailing comma makes auto-formatting nicer for build methods.
     );
+  }
+
+  void showMessage(String msg) {
+    var snackBar = SnackBar(
+      content: Text(msg),
+    );
+    if (mContext == null) {
+      print('mContext is null');
+    } else {
+      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
+    }
+  }
+
+  @override
+  void onLogout() {
+    curNavBarIndex = 0;
+    setState(() {});
+  }
+
+  @override
+  void onLogin() {
+    curNavBarIndex = 0;
+    setState(() {});
   }
 }

@@ -125,16 +125,7 @@ class _ClassManageState extends State<StatefulWidget> {
             ),
 
             // create class
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(8),
-              color: Theme.of(context).primaryColor,
-              child: const Text(
-                "创建班级",
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-            ),
-
+            const TitleTextWithBg(title: "创建班级"),
             const SizedBox(
               height: 8,
             ),
@@ -223,16 +214,87 @@ class _ClassManageState extends State<StatefulWidget> {
             const SizedBox(
               height: 8,
             ),
-            ClassListWrap(
+            ClassListWidget(
                 schoolId: curSchool?.id,
                 newUpdateTime: classNewUpdateTime,
                 onClasSet: (v) {}),
+            const SizedBox(
+              height: 32,
+            ),
+            const TitleTextWithBg(title: '人员审批'),
+            StaffApplicationManageWidget(),
           ],
         ));
   }
 
   void updateUI() {
     setState(() {});
+  }
+}
+
+class StaffApplicationManageWidget extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    return _StaffApplicationManageWidgetState();
+  }
+}
+
+class _StaffApplicationManageWidgetState
+    extends State<StaffApplicationManageWidget> {
+  List<StaffApplication> dataList = [];
+
+  @override
+  void initState() {
+    loadData();
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (dataList.isEmpty) {
+      return Text("暂无申请");
+    } else {
+      return Expanded(
+          child: ListView.builder(
+              // fix bug Cannot hit test a render box that has never been laid out.
+              shrinkWrap: true,
+              itemCount: dataList.length,
+              itemBuilder: (context, index) => Row(children: [
+                    Text(dataList[index].name ?? ""),
+                    // Text('(${dataList[index].email ?? ""})'),
+                    Text(' 申请成为：'),
+                    Text(UserInfo.getTypeString(dataList[index].targetType!)),
+                    Expanded(child: Container()),
+                    IconButton(
+                        onPressed: () {
+                          AppModel.instance
+                              .updateStaffApplications(dataList[index].id, 1)
+                              .then((v) {
+                            dataList.removeAt(index);
+                            setState(() {});
+                          });
+                        },
+                        icon: const Icon(Icons.check)),
+                    IconButton(
+                        onPressed: () {
+                          AppModel.instance
+                              .updateStaffApplications(
+                                  dataList[index].id, 2)
+                              .then((v) {
+                            dataList.removeAt(index);
+                            setState(() {});
+                          });
+                        },
+                        icon: const Icon(Icons.close)),
+                  ])));
+    }
+  }
+
+  void loadData() {
+    AppModel.instance.loadStaffApplications().then((list) {
+      dataList = list;
+      setState(() {});
+    });
   }
 }
 

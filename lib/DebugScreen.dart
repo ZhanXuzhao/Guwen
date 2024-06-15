@@ -65,6 +65,11 @@ class _DebugScreenState extends State<StatefulWidget> {
                         "user test ${math.Random().nextInt(1000)}");
                   },
                   child: const Text("sendSearchRequest")),
+              ElevatedButton(
+                  onPressed: () {
+                    appModel.createStaffApplications(0);
+                  },
+                  child: const Text("createStaffApplications")),
             ],
           ),
         ],

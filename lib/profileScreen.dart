@@ -41,6 +41,14 @@ class _ProfileScreenState extends State<StatefulWidget> {
 
   var curSchoolId;
 
+  // change user info
+  var isModifyingUserName = false;
+  var modifyUserNameController = TextEditingController();
+  var isModifyingUserType = false;
+  var modifyingUserTypeMsg = '';
+  var userTypeChoice = ['学生', '教师'];
+  int? curUserType;
+
   // SchoolIdSteam schoolIdSteam = SchoolIdSteam();
 
   @override
@@ -81,13 +89,103 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   const SizedBox(
                     height: 8,
                   ),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    direction: Axis.vertical,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text("账户: ${appModel.lcUser?.email ?? "未登录"}"),
-                      Text("姓名: ${appModel.userInfo.name ?? "未设置"}"),
+                      Row(
+                        children: [
+                          const Text("姓名: "),
+                          if (!isModifyingUserName)
+                            Text("${appModel.userInfo.name ?? "未设置"}"),
+                          if (isModifyingUserName)
+                            Expanded(
+                              child: TextField(
+                                controller: modifyUserNameController,
+                              ),
+                            ),
+                          const SizedBox(
+                            width: 8,
+                          ),
+                          if (!isModifyingUserName)
+                            TextButton(
+                                onPressed: () {
+                                  modifyUserNameController.text =
+                                      appModel.userInfo.name ?? "";
+                                  isModifyingUserName = true;
+                                  setState(() {});
+                                },
+                                child: const Text("修改")),
+                          if (isModifyingUserName)
+                            TextButton(
+                                onPressed: () {
+                                  appModel
+                                      .updateUsername(
+                                          modifyUserNameController.text)
+                                      .then((v) {
+                                    isModifyingUserName = false;
+                                    setState(() {});
+                                  });
+                                },
+                                child: const Text("确认")),
+                        ],
+                      ),
+                      Row(
+                        children: [
+                          const Text("身份: "),
+                          if (!isModifyingUserType)
+                            Text("${appModel.userInfo.getCurTypeString()}"),
+                          if (isModifyingUserType)
+                            Wrap(
+                              spacing: 8,
+                              children: List<Widget>.generate(
+                                userTypeChoice.length,
+                                (int index) {
+                                  return ChoiceChip(
+                                    label: Text(userTypeChoice[index]),
+                                    selected: curUserType == index,
+                                    onSelected: (bool selected) {
+                                      curUserType = index;
+                                      setState(() {});
+                                    },
+                                  );
+                                },
+                              ).toList(),
+                            ),
+                          if (!isModifyingUserType)
+                            TextButton(
+                                onPressed: () {
+                                  isModifyingUserType = true;
+                                  curUserType = null;
+                                  setState(() {});
+                                },
+                                child: const Text("修改")),
+                          if (isModifyingUserType)
+                            TextButton(
+                                onPressed: () {
+                                  if (curUserType == null) {
+                                    isModifyingUserType = false;
+                                    setState(() {});
+                                    return;
+                                  }
+                                  AppModel.instance
+                                      .createStaffApplications(curUserType!);
+                                  modifyingUserTypeMsg = '申请已发送，等待审批中';
+                                  isModifyingUserType = false;
+                                  setState(() {});
+                                },
+                                child: const Text("确认")),
+                          if (isModifyingUserType)
+                            TextButton(
+                                onPressed: () {
+                                  isModifyingUserType = false;
+                                  curUserType = null;
+                                  setState(() {});
+                                },
+                                child: const Text("取消")),
+                          Text(modifyingUserTypeMsg),
+                        ],
+                      ),
                       Row(
                         children: [
                           Text(
@@ -99,7 +197,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                           const SizedBox(
                             width: 8,
                           ),
-                          ElevatedButton(
+                          TextButton(
                               onPressed: () {
                                 showClassList = !showClassList;
                                 showSchoolList = false;
@@ -138,7 +236,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
 
                         // class list
                         const Text("选择班级："),
-                        ClassListWrap(
+                        ClassListWidget(
                             schoolId: curSchoolId,
                             onClasSet: (clas) {
                               appModel.setUserClass(clas).then((_) {
@@ -152,6 +250,18 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   const SizedBox(
                     height: 8,
                   ),
+
+                  Expanded(child: Container()),
+                  Container(
+                      alignment: Alignment.center,
+                      child: ElevatedButton(
+                          onPressed: () {
+                            appModel.logout();
+                            setState(() {
+
+                            });
+                          },
+                          child: const Text("退出登录"))),
                 ],
               ))
             else
@@ -249,7 +359,6 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       const SizedBox(
                         width: 8,
                       ),
-
                     ],
                   ),
                   if (showLoginMsg) Text(loginMsg),
@@ -368,8 +477,8 @@ class _SchoolWrapState extends State<SchoolListWrap> {
   }
 }
 
-class ClassListWrap extends StatefulWidget {
-  ClassListWrap(
+class ClassListWidget extends StatefulWidget {
+  ClassListWidget(
       {super.key,
       this.schoolId,
       this.newUpdateTime = 0,
@@ -381,11 +490,11 @@ class ClassListWrap extends StatefulWidget {
 
   @override
   State<StatefulWidget> createState() {
-    return _ClassListWrapState();
+    return _ClassListWidgetState();
   }
 }
 
-class _ClassListWrapState extends State<ClassListWrap> {
+class _ClassListWidgetState extends State<ClassListWidget> {
   late List<Clas> classList = [];
   int? curIndex;
   AppModel appModel = AppModel();
@@ -400,7 +509,7 @@ class _ClassListWrapState extends State<ClassListWrap> {
   }
 
   @override
-  void didUpdateWidget(covariant ClassListWrap oldWidget) {
+  void didUpdateWidget(covariant ClassListWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
     var needUpdate = widget.newUpdateTime > lastUpdateTime;
     if (needUpdate || oldWidget.schoolId != widget.schoolId) {

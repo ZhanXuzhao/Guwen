@@ -15,12 +15,16 @@ import 'package:leancloud_storage/leancloud.dart';
 // }
 
 class UserInfo {
+  static const TABLE = "UserInfo";
+
   // 正确初始化后不为空
   LCObject? lco;
   String? id;
   String? name;
   Clas? clas;
   String? lcUserId;
+  int type = 0; // 0 student, 1 teacher, 100 admin
+  int admin = 0; // 0 非admin, 1 admin
 
   static UserInfo? parse(LCObject? obj) {
     if (obj == null) {
@@ -30,6 +34,8 @@ class UserInfo {
     u.lco = obj;
     u.id = obj.objectId;
     u.name = obj['name'];
+    u.type = obj['type'] ?? 0;
+    u.admin = obj['admin'] ?? 0;
     var lcUserObj = obj['lcUser'];
     if (lcUserObj != null) {
       u.lcUserId = lcUserObj['objectId'];
@@ -41,7 +47,7 @@ class UserInfo {
   }
 
   static UserInfo? decode(String? jsonString) {
-    if (jsonString == null || jsonString=="null") {
+    if (jsonString == null || jsonString == "null") {
       return null;
     }
     Map<String, dynamic> data = jsonDecode(jsonString);
@@ -58,6 +64,48 @@ class UserInfo {
       }
     });
     return result;
+  }
+
+  String getCurTypeString() {
+    return getTypeString(type);
+  }
+
+  static String getTypeString(int type) {
+    if (type == 0) {
+      return "学生";
+    } else if (type == 1) {
+      return "老师";
+    } else if (type == 100) {
+      return "管理员";
+    } else {
+      return "其它";
+    }
+  }
+}
+
+class StaffApplication {
+  static const TABLE = "StaffApplication";
+
+  LCObject? lco;
+  String? id;
+  String? userId; // 申请人 userId
+  String? name;
+  String? email;
+  int? targetType;
+  int status = 0; // 0 unresolved, 1 approved, 2 denied, 3 timeout
+  String? msg;
+
+  static StaffApplication parse(LCObject obj) {
+    StaffApplication data = StaffApplication();
+    data.lco = obj;
+    data.id = obj.objectId;
+    data.userId = obj['userId'];
+    data.email = obj['email'];
+    data.name = obj['name'];
+    data.targetType = obj['targetType'];
+    data.status = obj['status'] ?? 0;
+    data.msg = obj['msg'];
+    return data;
   }
 }
 
@@ -81,8 +129,11 @@ class Clas {
 
 class School {
   LCObject? lco;
+
   String? get id => lco?.objectId;
+
   String? get name => lco?['name'];
+
   int get clasCount => lco?['clasCount'] ?? 0;
 
   static School parse(LCObject obj) {
