@@ -121,10 +121,11 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
           });
         },
         items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.search),
-            label: '搜索',
-          ),
+          if (appModel.hasLogin())
+            BottomNavigationBarItem(
+              icon: Icon(Icons.search),
+              label: '搜索',
+            ),
           if (appModel.hasLogin())
             BottomNavigationBarItem(
               icon: Icon(Icons.timeline),
@@ -152,7 +153,7 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
       body: [
         //
         // const SearchScreen2(),
-        SearchScreen2(),
+        if (appModel.hasLogin()) SearchScreen2(),
         if (appModel.hasLogin()) StaticScreen(),
         if (appModel.hasLogin()) ClassManageScreen(),
         ProfileScreen2(),
@@ -183,6 +184,12 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
   @override
   void onLogin() {
     curNavBarIndex = 0;
+    setState(() {});
+  }
+
+  @override
+  void changeTab(int tabIndex) {
+    curNavBarIndex = tabIndex;
     setState(() {});
   }
 }

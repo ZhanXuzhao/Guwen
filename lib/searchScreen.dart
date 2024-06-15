@@ -92,7 +92,9 @@ class _SearchScreenState extends State<StatefulWidget> {
                 child: Row(
                   children: [
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        appModel.changeTab(0);
+                      },
                       icon: const Icon(
                         Icons.home_outlined,
                         color: Colors.white,
@@ -100,7 +102,9 @@ class _SearchScreenState extends State<StatefulWidget> {
                       ),
                     ),
                     IconButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        appModel.changeTab(1);
+                      },
                       icon: const Icon(
                         Icons.account_circle_outlined,
                         color: Colors.white,
@@ -231,9 +235,7 @@ class _SearchScreenState extends State<StatefulWidget> {
                           label: Text(exampleSearchText[index]),
                           onPressed: () {
                             regController.text = exampleSearchText[index];
-                            setState(() {
-
-                            });
+                            setState(() {});
                           },
                         );
                       }),

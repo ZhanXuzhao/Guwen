@@ -572,7 +572,7 @@ class AppModel extends ChangeNotifier {
   Future<void> login(String username, String password) async {
     await LCUser.login(username, password);
     initUser();
-    for(var l in _AppModelListeners){
+    for (var l in _AppModelListeners) {
       l.onLogin();
     }
   }
@@ -669,6 +669,23 @@ class AppModel extends ChangeNotifier {
   void unregisterCallback(AppModelCallbacks cb) {
     _AppModelListeners.remove(cb);
   }
+
+  // tabType 0 home, 1 profile
+  void changeTab(int tabType) {
+    var tabIndex = 0;
+    if (tabType == 0) {
+      tabIndex = 0;
+    } else if (tabType == 1) {
+      if (hasLogin()) {
+        tabIndex = 3;
+      } else {
+        tabIndex = 0;
+      }
+    }
+    for (var l in _AppModelListeners) {
+      l.changeTab(tabIndex);
+    }
+  }
 }
 
 abstract class AppModelCallbacks {
@@ -676,6 +693,8 @@ abstract class AppModelCallbacks {
   void onLogout();
 
   void onLogin();
+
+  void changeTab(int tabIndex);
 }
 
 void getAllFiles(String path, List<String> list) {

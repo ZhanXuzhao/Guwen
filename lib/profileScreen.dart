@@ -1,6 +1,7 @@
 import 'dart:developer';
 
 import 'package:f05/models.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:leancloud_storage/leancloud.dart';
 
@@ -257,9 +258,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       child: ElevatedButton(
                           onPressed: () {
                             appModel.logout();
-                            setState(() {
-
-                            });
+                            setState(() {});
                           },
                           child: const Text("退出登录"))),
                 ],
@@ -359,6 +358,14 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       const SizedBox(
                         width: 8,
                       ),
+
+                      // debug login
+                      if (kDebugMode)
+                        ElevatedButton(
+                            onPressed: () {
+                              appModel.login('649912323@qq.com', '123');
+                            },
+                            child: const Text("登录 6499")),
                     ],
                   ),
                   if (showLoginMsg) Text(loginMsg),
