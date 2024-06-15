@@ -507,7 +507,7 @@ class AppModel extends ChangeNotifier {
     return list;
   }
 
-  Future<void> updateSchoolClassCount() async {
+  Future<void> updateAllSchoolClassCount() async {
     var query = LCQuery("School");
     query.orderByAscending('name');
     var findResult = await query.find();
@@ -517,6 +517,18 @@ class AppModel extends ChangeNotifier {
       i['clasCount'] = count;
     }
     LCObject.saveAll(findResult);
+  }
+
+  Future<void> increaseSchoolClassCount(String? schoolId, int amount) async {
+    log("increaseSchoolClassCount school id: $schoolId");
+    if (schoolId == null || schoolId.isEmpty) {
+      return;
+    }
+    var query = LCQuery("School");
+    var school = await query.get(schoolId);
+    log("increaseSchoolClassCount school: $school");
+    school?.increment('clasCount', amount);
+    school?.save();
   }
 
   // Future<List<LCObject>?> getClasLCOList() async {
@@ -541,6 +553,7 @@ class AppModel extends ChangeNotifier {
       clas['schoolId'] = school.id;
       clas['schoolName'] = school.name;
       await clas.save();
+      increaseSchoolClassCount(school.id, 1);
     } else {
       log("create fail, name duplicate");
       throw Exception("已存在同名班级");
@@ -570,9 +583,12 @@ class AppModel extends ChangeNotifier {
     if (lco == null) {
       log("create fail, class:$className not exist");
     } else {
+      var oldSchoolId = lco['schoolId'];
       lco['schoolId'] = school.id;
       lco['schoolName'] = school.name;
       await lco.save();
+      increaseSchoolClassCount(oldSchoolId, -1);
+      increaseSchoolClassCount(lco['schoolId'].schoolId, 1);
     }
   }
 

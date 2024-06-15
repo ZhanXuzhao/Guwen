@@ -41,7 +41,7 @@ class _DebugScreenState extends State<StatefulWidget> {
             children: [
               ElevatedButton(
                   onPressed: () {
-                    appModel.updateSchoolClassCount();
+                    appModel.updateAllSchoolClassCount();
                   },
                   child: const Text("updateSchoolClassCount")),
               ElevatedButton(

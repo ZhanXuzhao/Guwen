@@ -81,16 +81,13 @@ class Clas {
 
 class School {
   LCObject? lco;
-  String? id;
-  String? name;
-  int clasCount = 0;
+  String? get id => lco?.objectId;
+  String? get name => lco?['name'];
+  int get clasCount => lco?['clasCount'] ?? 0;
 
   static School parse(LCObject obj) {
     School school = School();
     school.lco = obj;
-    school.id = obj.objectId;
-    school.name = obj['name'];
-    school.clasCount = obj['clasCount'] ?? 0;
     return school;
   }
 }
