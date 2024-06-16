@@ -4,10 +4,10 @@ import 'dart:io';
 
 import 'package:f05/models.dart';
 import 'package:f05/profileScreen.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
-import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'dir_list.dart';
@@ -48,6 +48,13 @@ class _SearchScreenState extends State<StatefulWidget> {
   late RegExp exp;
 
   var navBarIndex = 0;
+
+  var showDownloadUI = false;
+
+  var downloadProgress = .0;
+  var downloadProgressText = '';
+
+  ValueNotifier<double> downloadProgressListener = ValueNotifier(0);
 
   @override
   void initState() {
@@ -253,6 +260,29 @@ class _SearchScreenState extends State<StatefulWidget> {
                     Text(searchResultStaticText),
                   ],
                 ),
+              Text("showDownloadUI $showDownloadUI"),
+              if (showDownloadUI) Text("showDownloadUI $showDownloadUI"),
+              if (showDownloadUI)
+                Text(
+                    '导出进度 ${(downloadProgressListener.value * 100).toStringAsFixed(0)}% '),
+              if (showDownloadUI)
+                Row(
+                  // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text(
+                        '导出进度 ${(downloadProgressListener.value * 100).toStringAsFixed(0)}% '),
+                    Expanded(
+                      child: ValueListenableBuilder(
+                          valueListenable: downloadProgressListener,
+                          builder: (context, value, child) {
+                            return LinearProgressIndicator(
+                              value: value,
+                              semanticsLabel: 'Linear progress indicator',
+                            );
+                          }),
+                    ),
+                  ],
+                ),
 
               const SizedBox(
                 height: 8,
@@ -435,27 +465,52 @@ class _SearchScreenState extends State<StatefulWidget> {
       dir.createSync(recursive: true);
     }
 
-    // appModel.setExportPath(path);
-    var file = File("$path/${getExportFileName()}.txt");
-    file.create(recursive: true);
-    print('export file $file');
-    for (var line in searchedTextList) {
-      // print('write $line');
-      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
-      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
-    }
+    // // appModel.setExportPath(path);
+    // var file = File("$path/${AppModel.instance.getExportFileName()}.txt");
+    // file.create(recursive: true);
+    // print('export file $file');
+    // int progress = 0;
+    // int p2 = 0;
+    // for (var line in searchedTextList) {
+    //   // print('write $line');
+    //   file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+    //   progress++;
+    //   if (progress - p2 > 100) {
+    //     p2 = progress;
+    //     downloadProgress = progress / searchedTextList.length;
+    //     downloadProgressText =
+    //         "导出进度1：${(downloadProgress * 100).toStringAsFixed(0)}";
+    //   }
+    //
+    //   setState(() {});
+    //   // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
+    // }
+    //
+    // print('export success');
+    // showMessage("导出成功 $path");
 
-    print('export success');
-    showMessage("导出成功 $path");
+    // showDownloadUI = true;
+    // setState(() {});
+    AppModel.instance.exportData(searchedTextList, (p) {
+      // downloadProgressListener.value = p;
+      // downloadProgress = p;
+      // log("downloadProgressListener $p");
+      // setState(() {});
+    }).then((v) {
+      showMessage("导出成功");
+    }).whenComplete(() {
+      // showDownloadUI = false;
+      // setState(() {});
+    });
   }
 
-  String getExportFileName() {
-    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    var hws = appModel.highlightWords.join("_");
-
-    var s = "${timeStr}_$hws";
-    return s;
-  }
+// String getExportFileName() {
+//   var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+//   var hws = appModel.highlightWords.join("_");
+//
+//   var s = "${timeStr}_$hws";
+//   return s;
+// }
 }
 
 // list view

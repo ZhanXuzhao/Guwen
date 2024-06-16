@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import 'package:leancloud_storage/leancloud.dart';
@@ -685,6 +686,61 @@ class AppModel extends ChangeNotifier {
     for (var l in _AppModelListeners) {
       l.changeTab(tabIndex);
     }
+  }
+
+  exportSearchResult(String path, List<String> searchedTextList,
+      ValueSetter<double> progressListener) {
+    // log("dir path: $path");
+    // var dp = (await getApplicationDocumentsDirectory()).path;
+    // var path = '$dp\\古汉语搜索结果';
+    var dir = Directory(path);
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
+    var file = File("$path/${getExportFileName()}.txt");
+    file.create(recursive: true);
+    log('export file $file');
+    var progress = 0;
+    for (var line in searchedTextList) {
+      // print('write $line');
+      progressListener(1.0 * ++progress / searchedTextList.length);
+      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
+    }
+
+    log('export success');
+    // showMessage("导出成功 $path");
+  }
+
+  Future<void> exportData(
+      List<String> data, ValueSetter<double> listener) async {
+    return Future(() async {
+      String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+      if (selectedDirectory != null) {
+        // User canceled the picker
+        log("dir path: $selectedDirectory");
+        AppModel.instance.exportSearchResult(selectedDirectory, data, listener);
+      } else {
+        throw Exception("未选择导出路径");
+      }
+    });
+    // String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
+    // if (selectedDirectory != null) {
+    //   // User canceled the picker
+    //   log("dir path: $selectedDirectory");
+    //   AppModel.instance
+    //       .exportSearchResult(selectedDirectory, data, listener);
+    // } else {
+    //   throw Exception("未选择导出路径");
+    // }
+  }
+
+  String getExportFileName() {
+    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var hws = highlightWords.join("_");
+
+    var s = "${timeStr}_$hws";
+    return s;
   }
 }
 

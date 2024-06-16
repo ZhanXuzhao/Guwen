@@ -24,6 +24,7 @@ dependencies:
   json_annotation: ^4.1.0
   stream_mixin: ^3.0.4
   webview_flutter: ^4.8.0
+  file_picker: ^8.0.5
   
 dev_dependencies:
   flutter_test:
