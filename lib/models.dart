@@ -34,7 +34,8 @@ List<String> listDir(String path) {
 }
 
 const String textFilePathDebug = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
-var innerYuliaoPathDebug = 'D:\\Projects\\GHY\\语料\\汉语语例溯源系统库short'; // 内置预料目录列表 test
+var innerYuliaoPathDebug =
+    'D:\\Projects\\GHY\\语料\\汉语语例溯源系统库short'; // 内置预料目录列表 test
 var innerYuliaoPathRelease = '/data/yl/汉语语例溯源系统库'; // 内置预料目录列表 release
 const String spKeyUserInfo = 'sp_user_info';
 
@@ -78,7 +79,6 @@ class AppModel extends ChangeNotifier {
   Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
     initDb();
-    initUser();
     return true;
   }
 
@@ -90,7 +90,9 @@ class AppModel extends ChangeNotifier {
     } else {
       // 已登录， 初始化 userInfo
       // load sp
-      var usp = await loadUserInfoFromSp();
+      // var usp = await loadUserInfoFromSp();
+      // 每次在线查询
+      UserInfo? usp;
       if (usp != null) {
         userInfo = usp;
       } else {
@@ -108,7 +110,9 @@ class AppModel extends ChangeNotifier {
       }
     }
     await initUserClass();
-
+    for (var l in _AppModelListeners) {
+      l.onUserInit();
+    }
     log("initUser: $userInfo");
   }
 
@@ -573,18 +577,19 @@ class AppModel extends ChangeNotifier {
   Future<void> login(String username, String password) async {
     await LCUser.login(username, password);
     initUser();
-    for (var l in _AppModelListeners) {
-      l.onLogin();
-    }
+    // for (var l in _AppModelListeners) {
+    //   l.onLogin();
+    // }
   }
 
   void logout() {
     LCUser.logout();
     lcUser = null;
     cacheUserInfoToSp(null);
-    for (var l in _AppModelListeners) {
-      l.onLogout();
-    }
+    initUser();
+    // for (var l in _AppModelListeners) {
+    //   l.onLogout();
+    // }
   }
 
   Future<void> createStaffApplications(int targetType) async {
@@ -663,6 +668,18 @@ class AppModel extends ChangeNotifier {
     return lcUser != null && !lcUser!.isAnonymous;
   }
 
+  // bool isStudent(){
+  //   return hasLogin() && userInfo.type == 0;
+  // }
+
+  bool isTeacher() {
+    return hasLogin() && userInfo.type == 1;
+  }
+
+  bool isAdmin(){
+    return hasLogin() && userInfo.admin == 1;
+  }
+
   void registerCallback(AppModelCallbacks cb) {
     _AppModelListeners.add(cb);
   }
@@ -677,7 +694,7 @@ class AppModel extends ChangeNotifier {
     if (tabType == 0) {
       tabIndex = 0;
     } else if (tabType == 1) {
-      if (hasLogin()) {
+      if (AppModel.instance.isTeacher()) {
         tabIndex = 3;
       } else {
         tabIndex = 0;
@@ -714,7 +731,7 @@ class AppModel extends ChangeNotifier {
 
   /// type 0 search result, 1 static result
   Future<void> pickDirAndExportData(
-      List<String> data,int type, ValueSetter<double> progressListener) async {
+      List<String> data, int type, ValueSetter<double> progressListener) async {
     return Future(() async {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null) {
@@ -730,7 +747,7 @@ class AppModel extends ChangeNotifier {
         var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
         var hws = highlightWords.join("_");
 
-        var fileName = type== 0 ? "搜索结果 $hws $timeStr" : "搜索统计 ${timeStr}";
+        var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 ${timeStr}";
 
         var file = File("$selectedDirectory/$fileName.txt");
         file.create(recursive: true);
@@ -739,9 +756,9 @@ class AppModel extends ChangeNotifier {
         for (var line in data) {
           // print('write $line');
           progressListener(1.0 * ++progress / data.length);
-          file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+          file.writeAsStringSync("$line\r",
+              mode: FileMode.append, encoding: utf8);
         }
-
       } else {
         throw Exception("未选择导出路径");
       }
@@ -764,10 +781,16 @@ class AppModel extends ChangeNotifier {
     var s = "${timeStr}_$hws";
     return s;
   }
+
+  void setAsAdmin(String? objectId) {
+    _updateUserDb('admin', 1);
+  }
 }
 
 abstract class AppModelCallbacks {
 // mixin AppModelCallbacks {
+  void onUserInit();
+
   void onLogout();
 
   void onLogin();

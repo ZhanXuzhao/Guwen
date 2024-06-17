@@ -87,6 +87,9 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
   @override
   void initState() {
     super.initState();
+    appModel.init().then((v) {
+      appModel.initUser();
+    });
     appModel.registerCallback(this);
   }
 
@@ -116,9 +119,11 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
         type: BottomNavigationBarType.fixed,
         currentIndex: curNavBarIndex,
         onTap: (index) {
-          setState(() {
-            curNavBarIndex = index;
-          });
+          if (index == 0) {
+            appModel.initUser();
+          }
+          curNavBarIndex = index;
+          setState(() {});
         },
         items: [
           if (appModel.hasLogin())
@@ -126,12 +131,12 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
               icon: Icon(Icons.search),
               label: '搜索',
             ),
-          if (appModel.hasLogin())
+          if (appModel.isTeacher())
             BottomNavigationBarItem(
               icon: Icon(Icons.timeline),
               label: '统计',
             ),
-          if (appModel.hasLogin())
+          if (appModel.isAdmin() || appModel.isTeacher())
             BottomNavigationBarItem(
               icon: Icon(Icons.school),
               label: '校务',
@@ -154,8 +159,8 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
         //
         // const SearchScreen2(),
         if (appModel.hasLogin()) SearchScreen2(),
-        if (appModel.hasLogin()) StaticScreen(),
-        if (appModel.hasLogin()) ClassManageScreen(),
+        if (appModel.isTeacher()) StaticScreen(),
+        if (appModel.isAdmin() || appModel.isTeacher()) ClassManageScreen(),
         ProfileScreen2(),
         if (kDebugMode) DebugScreen(),
       ][curNavBarIndex],
@@ -173,6 +178,12 @@ class _MyHomePageState extends State<MyHomePage> implements AppModelCallbacks {
     } else {
       ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
     }
+  }
+
+  @override
+  void onUserInit() {
+    curNavBarIndex = 0;
+    setState(() {});
   }
 
   @override

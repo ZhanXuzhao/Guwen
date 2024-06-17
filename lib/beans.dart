@@ -23,7 +23,7 @@ class UserInfo {
   String? name;
   Clas? clas;
   String? lcUserId;
-  int type = 0; // 0 student, 1 teacher, 100 admin
+  int type = 0; // 0 student, 1 teacher
   int admin = 0; // 0 非admin, 1 admin
 
   static UserInfo? parse(LCObject? obj) {

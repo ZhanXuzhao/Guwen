@@ -34,7 +34,7 @@ class _ClassManageState extends State<StatefulWidget> {
   @override
   void initState() {
     appModel = AppModel();
-    appModel.init();
+    // appModel.init();
     // loadClasses();
     // appModel.init();
     super.initState();
@@ -221,8 +221,9 @@ class _ClassManageState extends State<StatefulWidget> {
             const SizedBox(
               height: 32,
             ),
-            const TitleTextWithBg(title: '人员审批'),
-            StaffApplicationManageWidget(),
+            if (AppModel.instance.isAdmin())
+              const TitleTextWithBg(title: '人员审批'),
+            if (AppModel.instance.isAdmin()) StaffApplicationManageWidget(),
           ],
         ));
   }
@@ -278,8 +279,7 @@ class _StaffApplicationManageWidgetState
                     IconButton(
                         onPressed: () {
                           AppModel.instance
-                              .updateStaffApplications(
-                                  dataList[index].id, 2)
+                              .updateStaffApplications(dataList[index].id, 2)
                               .then((v) {
                             dataList.removeAt(index);
                             setState(() {});

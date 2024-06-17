@@ -55,7 +55,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
   @override
   void initState() {
     appModel = AppModel();
-    appModel.init();
+    // appModel.init();
     // loadClasses();
     // appModel.init();
     super.initState();
@@ -93,7 +93,17 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("账户: ${appModel.lcUser?.email ?? "未登录"}"),
+                      Row(
+                        children: [
+                          Text("账户: ${appModel.lcUser?.email ?? "未登录"}"),
+                          TextButton(
+                              onPressed: () {
+                                appModel.logout();
+                                // setState(() {});
+                              },
+                              child: const Text("退出登录"))
+                        ],
+                      ),
                       Row(
                         children: [
                           const Text("姓名: "),
@@ -253,14 +263,14 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   ),
 
                   Expanded(child: Container()),
-                  Container(
-                      alignment: Alignment.center,
-                      child: ElevatedButton(
-                          onPressed: () {
-                            appModel.logout();
-                            setState(() {});
-                          },
-                          child: const Text("退出登录"))),
+                  // Container(
+                  //     alignment: Alignment.center,
+                  //     child: ElevatedButton(
+                  //         onPressed: () {
+                  //           appModel.logout();
+                  //           setState(() {});
+                  //         },
+                  //         child: const Text("退出登录"))),
                 ],
               ))
             else
