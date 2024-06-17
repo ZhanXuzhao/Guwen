@@ -463,13 +463,13 @@ class _SearchScreenState extends State<StatefulWidget> {
     return true;
   }
 
-  void exportSearchResult() async {
-    var dp = (await getApplicationDocumentsDirectory()).path;
-    var path = '$dp\\古汉语搜索结果';
-    var dir = Directory(path);
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
+  void exportSearchResult() {
+    // var dp = (await getApplicationDocumentsDirectory()).path;
+    // var path = '$dp\\古汉语搜索结果';
+    // var dir = Directory(path);
+    // if (!dir.existsSync()) {
+    //   dir.createSync(recursive: true);
+    // }
 
     // // appModel.setExportPath(path);
     // var file = File("$path/${AppModel.instance.getExportFileName()}.txt");
@@ -497,12 +497,7 @@ class _SearchScreenState extends State<StatefulWidget> {
 
     // showDownloadUI = true;
     // setState(() {});
-    AppModel.instance.pickDirAndExportData(searchedTextList, 0, (p) {
-      // downloadProgressListener.value = p;
-      // downloadProgress = p;
-      // log("downloadProgressListener $p");
-      // setState(() {});
-    }).then((v) {
+    AppModel.instance.pickDirAndExportData(searchedTextList, 0, null).then((v) {
       showMessage("导出成功");
     }).whenComplete(() {
       // showDownloadUI = false;
