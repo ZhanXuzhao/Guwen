@@ -34,7 +34,7 @@ List<String> listDir(String path) {
 }
 
 const String textFilePathDebug = "D:\\Projects\\GHY\\语料\\01先秦"; // 默认外部预料路径
-var innerYuliaoPathDebug = 'D:/Projects/GHY/汉语语例溯源系统库short'; // 内置预料目录列表 test
+var innerYuliaoPathDebug = 'D:\\Projects\\GHY\\语料\\汉语语例溯源系统库short'; // 内置预料目录列表 test
 var innerYuliaoPathRelease = '/data/yl/汉语语例溯源系统库'; // 内置预料目录列表 release
 const String spKeyUserInfo = 'sp_user_info';
 
