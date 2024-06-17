@@ -4,6 +4,7 @@ import 'dart:io';
 
 import 'package:f05/models.dart';
 import 'package:f05/profileScreen.dart';
+import 'package:f05/webScreen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -185,14 +186,7 @@ class _SearchScreenState extends State<StatefulWidget> {
                       label: Text(searchTabs[index]),
                       selected: curSearchTab == index,
                       onSelected: (bool selected) {
-                        setState(() {
-                          curSearchTab = selected ? index : curSearchTab;
-                          appModel.setYuliaoType(index);
-                          if (curSearchTab == searchTabs.length - 1) {
-                            FileListPage.launch(context,
-                                kDebugMode ? textFilePathDebug : "", true);
-                          }
-                        });
+                        onSearchTabClick(selected, index, context);
                       },
                     );
                   },
@@ -318,6 +312,24 @@ class _SearchScreenState extends State<StatefulWidget> {
         )),
       ],
     );
+  }
+
+  void onSearchTabClick(bool selected, int index, BuildContext context) {
+    if (!selected) {
+      return;
+    }
+    if (index < 4) {
+      curSearchTab = selected ? index : curSearchTab;
+      appModel.setYuliaoType(index);
+      if (curSearchTab == searchTabs.length - 1) {
+        FileListPage.launch(context, kDebugMode ? textFilePathDebug : "", true);
+      }
+    } else {
+      var url = index == 4 ? webGgxds : webQxk;
+      WebScreen.launch(context, url);
+    }
+
+    setState(() {});
   }
 
   Future<void> searchData() async {
