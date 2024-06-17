@@ -33,6 +33,7 @@ class _StaticScreenState extends State<StatefulWidget> {
   var curClassChipIndex = 0;
   String? curClassId;
   Map<String, int> searchMap = {};
+  List<String> searchHistory = [];
 
   @override
   void initState() {
@@ -123,22 +124,49 @@ class _StaticScreenState extends State<StatefulWidget> {
                 height: 8,
               ),
               Expanded(
-                child: ListView.builder(
-                    // fix bug Cannot hit test a render box that has never been laid out.
-                    shrinkWrap: true,
-                    itemCount: searchMap.entries.length,
-                    itemBuilder: (context, index) => Padding(
-                        padding: const EdgeInsets.all(4),
-                        child: Text(
-                          "${searchMap.keys.elementAt(index)} —— "
-                          "${searchMap.values.elementAt(index)} 次",
-                        ))),
-              )
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ListView.builder(
+                          // fix bug Cannot hit test a render box that has never been laid out.
+                          shrinkWrap: true,
+                          itemCount: searchMap.entries.length,
+                          itemBuilder: (context, index) => Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Text(
+                                "${searchMap.keys.elementAt(index)} —— "
+                                "${searchMap.values.elementAt(index)} 次",
+                              ))),
+                    ),
+                    Positioned(
+                      bottom: 32,
+                      right: 32,
+                      child: FloatingActionButton(
+                        onPressed: () {
+                          AppModel.instance
+                              .pickDirAndExportData(searchHistory, 1, (v) {})
+                              .then((v) {
+                            showMessage('导出成功');
+                          });
+                        },
+                        tooltip: '导出',
+                        child: const Icon(Icons.download),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         )),
       ],
     );
+  }
+
+  void showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+    ));
   }
 
   void onDateTabClick(int index, BuildContext context) {
@@ -184,6 +212,10 @@ class _StaticScreenState extends State<StatefulWidget> {
     curEndDate = end;
     appModel.getSearchHistory(start, end, curClassId).then((map) {
       searchMap = map;
+      searchHistory.clear();
+      for (var et in searchMap.entries) {
+        searchHistory.add('${et.key} —— ${et.value}');
+      }
       setState(() {});
     });
   }

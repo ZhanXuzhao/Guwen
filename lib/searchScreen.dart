@@ -260,11 +260,6 @@ class _SearchScreenState extends State<StatefulWidget> {
                     Text(searchResultStaticText),
                   ],
                 ),
-              Text("showDownloadUI $showDownloadUI"),
-              if (showDownloadUI) Text("showDownloadUI $showDownloadUI"),
-              if (showDownloadUI)
-                Text(
-                    '导出进度 ${(downloadProgressListener.value * 100).toStringAsFixed(0)}% '),
               if (showDownloadUI)
                 Row(
                   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -293,11 +288,11 @@ class _SearchScreenState extends State<StatefulWidget> {
                   child: Stack(
                     children: [
                       // bg, make Stack expend
-                      const SizedBox(
-                        height: double.infinity,
-                        width: double.infinity,
-                        // color: Colors.green,
-                      ),
+                      // const SizedBox(
+                      //   height: double.infinity,
+                      //   width: double.infinity,
+                      //   // color: Colors.green,
+                      // ),
 
                       // list of search result
                       Positioned.fill(
@@ -424,16 +419,16 @@ class _SearchScreenState extends State<StatefulWidget> {
     return filePath;
   }
 
-  void showMessage(String msg) {
-    var snackBar = SnackBar(
-      content: Text(msg),
-    );
-    if (mContext == null) {
-      print('mContext is null');
-    } else {
-      ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
-    }
-  }
+  // void showMessage(String msg) {
+  //   var snackBar = SnackBar(
+  //     content: Text(msg),
+  //   );
+  //   if (mContext == null) {
+  //     print('mContext is null');
+  //   } else {
+  //     ScaffoldMessenger.of(mContext!).showSnackBar(snackBar);
+  //   }
+  // }
 
   void updateUI() {
     setState(() {});
@@ -491,7 +486,7 @@ class _SearchScreenState extends State<StatefulWidget> {
 
     // showDownloadUI = true;
     // setState(() {});
-    AppModel.instance.exportData(searchedTextList, (p) {
+    AppModel.instance.pickDirAndExportData(searchedTextList, 0, (p) {
       // downloadProgressListener.value = p;
       // downloadProgress = p;
       // log("downloadProgressListener $p");
@@ -504,6 +499,11 @@ class _SearchScreenState extends State<StatefulWidget> {
     });
   }
 
+  void showMessage(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(msg),
+    ));
+  }
 // String getExportFileName() {
 //   var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
 //   var hws = appModel.highlightWords.join("_");

@@ -72,7 +72,7 @@ class _DebugScreenState extends State<StatefulWidget> {
                   child: const Text("createStaffApplications")),
               ElevatedButton(
                   onPressed: () {
-                    appModel.exportData(['hi'],(p){});
+                    appModel.pickDirAndExportData(['hi'],0,(p){});
                   },
                   child: const Text("export")),
             ],

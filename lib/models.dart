@@ -688,38 +688,60 @@ class AppModel extends ChangeNotifier {
     }
   }
 
-  exportSearchResult(String path, List<String> searchedTextList,
-      ValueSetter<double> progressListener) {
-    // log("dir path: $path");
-    // var dp = (await getApplicationDocumentsDirectory()).path;
-    // var path = '$dp\\古汉语搜索结果';
-    var dir = Directory(path);
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
-    var file = File("$path/${getExportFileName()}.txt");
-    file.create(recursive: true);
-    log('export file $file');
-    var progress = 0;
-    for (var line in searchedTextList) {
-      // print('write $line');
-      progressListener(1.0 * ++progress / searchedTextList.length);
-      file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
-      // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
-    }
+  // exportData(String path, String fileNameSuffix, List<String> searchedTextList,
+  //     ValueSetter<double> progressListener) {
+  //   // log("dir path: $path");
+  //   // var dp = (await getApplicationDocumentsDirectory()).path;
+  //   // var path = '$dp\\古汉语搜索结果';
+  //   var dir = Directory(path);
+  //   if (!dir.existsSync()) {
+  //     dir.createSync(recursive: true);
+  //   }
+  //   var file = File("$path/${getExportFileName(fileNameSuffix)}.txt");
+  //   file.create(recursive: true);
+  //   log('export file $file');
+  //   var progress = 0;
+  //   for (var line in searchedTextList) {
+  //     // print('write $line');
+  //     progressListener(1.0 * ++progress / searchedTextList.length);
+  //     file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+  //     // file.writeAsStringSync('\r', mode: FileMode.append, encoding: utf8);
+  //   }
+  //
+  //   log('export success');
+  //   // showMessage("导出成功 $path");
+  // }
 
-    log('export success');
-    // showMessage("导出成功 $path");
-  }
-
-  Future<void> exportData(
-      List<String> data, ValueSetter<double> listener) async {
+  /// type 0 search result, 1 static result
+  Future<void> pickDirAndExportData(
+      List<String> data,int type, ValueSetter<double> progressListener) async {
     return Future(() async {
       String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
       if (selectedDirectory != null) {
         // User canceled the picker
         log("dir path: $selectedDirectory");
-        AppModel.instance.exportSearchResult(selectedDirectory, data, listener);
+        // AppModel.instance.exportData(selectedDirectory,fileNameSuffix, data, progressListener);
+
+        var dir = Directory(selectedDirectory);
+        if (!dir.existsSync()) {
+          dir.createSync(recursive: true);
+        }
+
+        var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+        var hws = highlightWords.join("_");
+
+        var fileName = type== 0 ? "搜索结果 $hws $timeStr" : "搜索统计 ${timeStr}";
+
+        var file = File("$selectedDirectory/$fileName.txt");
+        file.create(recursive: true);
+        log('export file $file');
+        var progress = 0;
+        for (var line in data) {
+          // print('write $line');
+          progressListener(1.0 * ++progress / data.length);
+          file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+        }
+
       } else {
         throw Exception("未选择导出路径");
       }
@@ -735,7 +757,7 @@ class AppModel extends ChangeNotifier {
     // }
   }
 
-  String getExportFileName() {
+  String getExportFileName(String fileNameSuffix) {
     var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
     var hws = highlightWords.join("_");
 
