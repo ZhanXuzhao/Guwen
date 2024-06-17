@@ -108,7 +108,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                         children: [
                           const Text("姓名: "),
                           if (!isModifyingUserName)
-                            Text("${appModel.userInfo.name ?? "未设置"}"),
+                            Text(appModel.userInfo.name ?? "未设置"),
                           if (isModifyingUserName)
                             Expanded(
                               child: TextField(
@@ -145,7 +145,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
                         children: [
                           const Text("身份: "),
                           if (!isModifyingUserType)
-                            Text("${appModel.userInfo.getCurTypeString()}"),
+                            Text(appModel.userInfo.getCurTypeString()),
                           if (isModifyingUserType)
                             Wrap(
                               spacing: 8,

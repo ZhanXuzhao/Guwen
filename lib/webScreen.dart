@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_windows/webview_windows.dart';
@@ -71,7 +70,7 @@ class _WebScreenState extends State<WebScreen> {
         showDialog(
             context: context,
             builder: (_) => AlertDialog(
-                  title: Text('Error'),
+                  title: const Text('Error'),
                   content: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -82,7 +81,7 @@ class _WebScreenState extends State<WebScreen> {
                   ),
                   actions: [
                     TextButton(
-                      child: Text('Continue'),
+                      child: const Text('Continue'),
                       onPressed: () {
                         Navigator.of(context).pop();
                       },
@@ -104,7 +103,7 @@ class _WebScreenState extends State<WebScreen> {
       );
     } else {
       return Padding(
-        padding: EdgeInsets.all(20),
+        padding: const EdgeInsets.all(20),
         child: Column(
           children: [
             Expanded(
@@ -119,9 +118,9 @@ class _WebScreenState extends State<WebScreen> {
                     builder: (context, snapshot) {
                       if (snapshot.hasData &&
                           snapshot.data == LoadingState.loading) {
-                        return LinearProgressIndicator();
+                        return const LinearProgressIndicator();
                       } else {
-                        return SizedBox();
+                        return const SizedBox();
                       }
                     }),
               ],
@@ -176,7 +175,9 @@ class _WebScreenState extends State<WebScreen> {
 
   @override
   void dispose() {
-    _subscriptions.forEach((s) => s.cancel());
+    for (var s in _subscriptions) {
+      s.cancel();
+    }
     _controller.dispose();
     super.dispose();
   }

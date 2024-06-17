@@ -52,7 +52,7 @@ class DbCons {
 class AppModel extends ChangeNotifier {
   static final AppModel instance = _instance;
   static final AppModel _instance = AppModel._internal();
-  List<AppModelCallbacks> _AppModelListeners = [];
+  final List<AppModelCallbacks> _AppModelListeners = [];
 
   factory AppModel() {
     return _instance;
@@ -93,20 +93,16 @@ class AppModel extends ChangeNotifier {
       // var usp = await loadUserInfoFromSp();
       // 每次在线查询
       UserInfo? usp;
-      if (usp != null) {
-        userInfo = usp;
+      // load database
+      var uo = await LCQuery(UserInfo.TABLE)
+          .whereEqualTo(DbCons.userInfoLcUser, lcUser)
+          .first();
+      if (uo != null) {
+        userInfo = UserInfo.parse(uo)!;
       } else {
-        // load database
-        var uo = await LCQuery(UserInfo.TABLE)
-            .whereEqualTo(DbCons.userInfoLcUser, lcUser)
-            .first();
-        if (uo != null) {
-          userInfo = UserInfo.parse(uo)!;
-        } else {
-          // create userInfo in database when no data there
-          userInfo = await createUserInfoInDb(lcUser: lcUser);
-          cacheUserInfoToSp(userInfo);
-        }
+        // create userInfo in database when no data there
+        userInfo = await createUserInfoInDb(lcUser: lcUser);
+        cacheUserInfoToSp(userInfo);
       }
     }
     await initUserClass();
@@ -676,7 +672,7 @@ class AppModel extends ChangeNotifier {
     return hasLogin() && userInfo.type == 1;
   }
 
-  bool isAdmin(){
+  bool isAdmin() {
     return hasLogin() && userInfo.admin == 1;
   }
 
@@ -747,7 +743,7 @@ class AppModel extends ChangeNotifier {
         var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
         var hws = highlightWords.join("_");
 
-        var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 ${timeStr}";
+        var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 $timeStr";
 
         var file = File("$selectedDirectory/$fileName.txt");
         file.create(recursive: true);

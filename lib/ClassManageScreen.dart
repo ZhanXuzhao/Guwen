@@ -223,7 +223,7 @@ class _ClassManageState extends State<StatefulWidget> {
             ),
             if (AppModel.instance.isAdmin())
               const TitleTextWithBg(title: '人员审批'),
-            if (AppModel.instance.isAdmin()) StaffApplicationManageWidget(),
+            if (AppModel.instance.isAdmin()) const StaffApplicationManageWidget(),
           ],
         ));
   }
@@ -234,6 +234,8 @@ class _ClassManageState extends State<StatefulWidget> {
 }
 
 class StaffApplicationManageWidget extends StatefulWidget {
+  const StaffApplicationManageWidget({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _StaffApplicationManageWidgetState();
@@ -253,7 +255,7 @@ class _StaffApplicationManageWidgetState
   @override
   Widget build(BuildContext context) {
     if (dataList.isEmpty) {
-      return Text("暂无申请");
+      return const Text("暂无申请");
     } else {
       return Expanded(
           child: ListView.builder(
@@ -263,7 +265,7 @@ class _StaffApplicationManageWidgetState
               itemBuilder: (context, index) => Row(children: [
                     Text(dataList[index].name ?? ""),
                     // Text('(${dataList[index].email ?? ""})'),
-                    Text(' 申请成为：'),
+                    const Text(' 申请成为：'),
                     Text(UserInfo.getTypeString(dataList[index].targetType!)),
                     Expanded(child: Container()),
                     IconButton(

@@ -5,7 +5,6 @@ import 'dart:io';
 import 'package:f05/models.dart';
 import 'package:f05/profileScreen.dart';
 import 'package:f05/webScreen.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
@@ -140,11 +139,11 @@ class _SearchScreenState extends State<StatefulWidget> {
                   Expanded(
                     child: TextField(
                       decoration: InputDecoration(
-                        border: OutlineInputBorder(),
+                        border: const OutlineInputBorder(),
                         hintText: '输入搜索正则表达式，如: 之.*者',
-                        suffixIcon: regController.text.length > 0
+                        suffixIcon: regController.text.isNotEmpty
                             ? IconButton(
-                                icon: Icon(
+                                icon: const Icon(
                                   Icons.clear_outlined,
                                   color: Colors.black54,
                                 ),
