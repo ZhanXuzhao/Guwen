@@ -1,12 +1,15 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:isolate';
 
+import 'package:easy_isolate/easy_isolate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
+import 'package:isolates_helper/isolates_helper.dart';
 import 'package:leancloud_storage/leancloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -704,7 +707,7 @@ class AppModel extends ChangeNotifier {
 
   /// type 0 search result, 1 static result
   Future<void> pickDirAndExportData(List<String> data, int type,
-      ValueSetter<double>? progressListener) async {
+      ValueSetter<ProgressEvent>? progressListener) async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
     if (selectedDirectory != null) {
       // User canceled the picker
@@ -717,22 +720,28 @@ class AppModel extends ChangeNotifier {
       var hws = highlightWords.join("_");
       var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 $timeStr";
       var filePath = "$selectedDirectory/$fileName.txt";
-      await Isolate.run(() async {
-        await writeToFile(filePath, data);
+      var worker = WriteFileWorker((p) {
+        if (progressListener != null) {
+          progressListener(p);
+        }
       });
+      // worker.init();
+      await worker.startWrite(WriteFileParams(filePath, data));
     } else {
       throw Exception("未选择导出路径");
     }
   }
 
-  static Future<void> writeToFile(String filePath, List<String> data) async {
+  static Future<File> writeToFile(String filePath, List<String> data) async {
     var file = File(filePath);
     file.create(recursive: true);
     log('export file $file');
     for (var line in data) {
-      file.writeAsStringSync("$line\r",
+      // file.writeAsStringSync("$line\r", mode: FileMode.append, encoding: utf8);
+      await file.writeAsString("$line\r",
           mode: FileMode.append, encoding: utf8);
     }
+    return file;
   }
 
   String getExportFileName(String fileNameSuffix) {
@@ -746,6 +755,101 @@ class AppModel extends ChangeNotifier {
   void setAsAdmin(String? objectId) {
     _updateUserDb('admin', 1);
   }
+
+  userIsolate() {
+    final receivePort = RawReceivePort();
+    receivePort.handler = (data) {
+      print(data);
+      if (data == 'close') {
+        receivePort.close();
+      }
+    };
+    Isolate.spawn((port) {
+      var i = 0;
+      while (i < 5) {
+        port.send('create:${i++}');
+      }
+      port.send('close');
+      port.send(1);
+    }, receivePort.sendPort);
+  }
+
+  static String fp = "";
+}
+
+class WriteFileWorker {
+  WriteFileWorker(this.progressListener);
+
+  ValueSetter<ProgressEvent> progressListener;
+  final worker = Worker();
+
+
+  Future<void> startWrite(WriteFileParams params) async {
+    await worker.init(
+      mainHandler,
+      isolateHandler,
+      errorHandler: print,
+    );
+    worker.sendMessage(params);
+  }
+
+  void mainHandler(dynamic data, SendPort isolateSendPort) {
+    if (data is ProgressEvent) {
+      // onNotifyProgress(data);
+      // update ui
+      progressListener(data);
+      // log("mainHandler progress ${data.progress}");
+      if (data.status == ProgressEvent.finish ||
+          data.status == ProgressEvent.error) {
+        worker.dispose();
+      }
+    }
+  }
+
+  static void isolateHandler(
+      dynamic params, SendPort mainSendPort, SendErrorFunction onSendError) {
+    if (params is WriteFileParams) {
+      // ...
+      mainSendPort.send(ProgressEvent(ProgressEvent.start, 0));
+      var data = params.data;
+      var file = File(params.path);
+      file.create(recursive: true);
+      log('export file $file');
+      int index = 0;
+      var preProgress = .0;
+      var progress = .0;
+      for (var line in data) {
+        file.writeAsStringSync("$line\r",
+            mode: FileMode.append, encoding: utf8);
+        index++;
+        progress = 1.0 * index / data.length;
+        mainSendPort.send(ProgressEvent(ProgressEvent.inProgress, progress));
+        if ((progress - preProgress) > 0.1) {
+          preProgress = progress;
+        }
+      }
+    }
+    mainSendPort.send(ProgressEvent(ProgressEvent.finish, 1));
+  }
+}
+
+class ProgressEvent {
+  ProgressEvent(this.status, this.progress);
+
+  final double progress;
+  final int status; // 1 start, 2 in progress, 3 finish, 4 error
+
+  static const start = 1;
+  static const inProgress = 2;
+  static const finish = 3;
+  static const error = 4;
+}
+
+class WriteFileParams {
+  WriteFileParams(this.path, this.data);
+
+  String path;
+  List<String> data;
 }
 
 abstract class AppModelCallbacks {

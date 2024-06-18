@@ -49,12 +49,8 @@ class _SearchScreenState extends State<StatefulWidget> {
 
   var navBarIndex = 0;
 
-  var showDownloadUI = false;
-
-  var downloadProgress = .0;
-  var downloadProgressText = '';
-
-  ValueNotifier<double> downloadProgressListener = ValueNotifier(0);
+  var showExportUI = false;
+  var exportProgress = .0;
 
   @override
   void initState() {
@@ -253,21 +249,16 @@ class _SearchScreenState extends State<StatefulWidget> {
                     Text(searchResultStaticText),
                   ],
                 ),
-              if (showDownloadUI)
+              if (showExportUI)
                 Row(
                   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    Text(
-                        '导出进度 ${(downloadProgressListener.value * 100).toStringAsFixed(0)}% '),
+                    Text('导出进度 ${(exportProgress * 100).toStringAsFixed(0)}% '),
                     Expanded(
-                      child: ValueListenableBuilder(
-                          valueListenable: downloadProgressListener,
-                          builder: (context, value, child) {
-                            return LinearProgressIndicator(
-                              value: value,
-                              semanticsLabel: 'Linear progress indicator',
-                            );
-                          }),
+                      child: LinearProgressIndicator(
+                        value: exportProgress,
+                        semanticsLabel: 'Linear progress indicator',
+                      ),
                     ),
                   ],
                 ),
@@ -280,13 +271,6 @@ class _SearchScreenState extends State<StatefulWidget> {
                 Expanded(
                   child: Stack(
                     children: [
-                      // bg, make Stack expend
-                      // const SizedBox(
-                      //   height: double.infinity,
-                      //   width: double.infinity,
-                      //   // color: Colors.green,
-                      // ),
-
                       // list of search result
                       Positioned.fill(
                         child: DataListView(textList: searchedTextList),
@@ -495,13 +479,24 @@ class _SearchScreenState extends State<StatefulWidget> {
     // print('export success');
     // showMessage("导出成功 $path");
 
-    // showDownloadUI = true;
-    // setState(() {});
-    AppModel.instance.pickDirAndExportData(searchedTextList, 0, null).then((v) {
-      showMessage("导出成功");
-    }).whenComplete(() {
-      // showDownloadUI = false;
-      // setState(() {});
+    AppModel.instance.pickDirAndExportData(searchedTextList, 0, (p) {
+      setState(() {
+        exportProgress = p.progress;
+        if (p.status == ProgressEvent.start) {
+          setState(() {
+            showExportUI = true;
+          });
+        } else if (p.status == ProgressEvent.finish ||
+            p.status == ProgressEvent.error) {
+          setState(() {
+            showExportUI = false;
+          });
+          showMessage("导出成功");
+        }
+        log("search screen progress $p");
+      });
+    }).then((v) {
+      // showMessage("导出成功");
     });
   }
 

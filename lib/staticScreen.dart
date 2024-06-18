@@ -35,6 +35,10 @@ class _StaticScreenState extends State<StatefulWidget> {
   Map<String, int> searchMap = {};
   List<String> searchHistory = [];
 
+  double exportProgress = .0;
+
+  bool showExportUI = false;
+
   @override
   void initState() {
     appModel = AppModel();
@@ -120,6 +124,19 @@ class _StaticScreenState extends State<StatefulWidget> {
 
               // ui search list
               const Text("搜索记录统计："),
+              if (showExportUI)
+                Row(
+                  // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    Text('导出进度 ${(exportProgress * 100).toStringAsFixed(0)}% '),
+                    Expanded(
+                      child: LinearProgressIndicator(
+                        value: exportProgress,
+                        semanticsLabel: 'Linear progress indicator',
+                      ),
+                    ),
+                  ],
+                ),
               const SizedBox(
                 height: 8,
               ),
@@ -144,8 +161,21 @@ class _StaticScreenState extends State<StatefulWidget> {
                       child: FloatingActionButton(
                         onPressed: () {
                           AppModel.instance
-                              .pickDirAndExportData(searchHistory, 1, (v) {})
-                              .then((v) {
+                              .pickDirAndExportData(searchHistory, 1, (p) {
+                            exportProgress = p.progress;
+                            if (p.status == ProgressEvent.start) {
+                              setState(() {
+                                showExportUI = true;
+                              });
+                            } else if (p.status == ProgressEvent.finish ||
+                                p.status == ProgressEvent.error) {
+                              setState(() {
+                                showExportUI = false;
+                              });
+                              showMessage("导出成功");
+                            }
+                            log("search screen progress $p");
+                          }).then((v) {
                             showMessage('导出成功');
                           });
                         },
