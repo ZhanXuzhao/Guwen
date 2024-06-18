@@ -41,10 +41,10 @@ flutter:
 
 # windows package config
 msix_config:
-  display_name: 古文搜索
+  display_name: 汉语溯源
   publisher_display_name: ZXZ Co.,Ltd.
   identity_name: zxz.guwen
-  msix_version: 1.0.0.0
+  msix_version: 2.0.0.0
   logo_path: C:\Users\64991\Pictures\app icon fish.png
   certificate_path: C:\Dev\证书\CERTIFICATE.pfx
   certificate_password: fastapp666
