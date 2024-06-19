@@ -9,8 +9,8 @@ import 'package:easy_isolate/easy_isolate.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
-import 'package:isolates_helper/isolates_helper.dart';
 import 'package:leancloud_storage/leancloud.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'beans.dart';
@@ -79,9 +79,11 @@ class AppModel extends ChangeNotifier {
   int? userType = 0; //0 undefine, 1 student, 2 teacher
   late UserInfo userInfo;
   LCUser? lcUser;
+  late PackageInfo packageInfo;
 
   Future<bool> init() async {
     sp = await SharedPreferences.getInstance();
+    packageInfo = await PackageInfo.fromPlatform();
     initDb();
     return true;
   }
@@ -774,7 +776,10 @@ class AppModel extends ChangeNotifier {
     }, receivePort.sendPort);
   }
 
-  static String fp = "";
+  getAppVersion() async {
+    var packageInfo = await PackageInfo.fromPlatform();
+    return packageInfo.version;
+  }
 }
 
 class WriteFileWorker {
@@ -782,7 +787,6 @@ class WriteFileWorker {
 
   ValueSetter<ProgressEvent> progressListener;
   final worker = Worker();
-
 
   Future<void> startWrite(WriteFileParams params) async {
     await worker.init(

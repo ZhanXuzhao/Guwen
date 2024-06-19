@@ -381,6 +381,15 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   if (showLoginMsg) Text(loginMsg),
                 ],
               )),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Center(child: Text('version: ${AppModel.instance.packageInfo.version}')),
+                ],
+              ),
+            ),
           ],
         ));
   }
