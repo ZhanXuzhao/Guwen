@@ -33,11 +33,14 @@ class _StaticScreenState extends State<StatefulWidget> {
   var curClassChipIndex = 0;
   String? curClassId;
   Map<String, int> searchMap = {};
+  List<SearchRequest> searchDetailList = [];
   List<String> searchHistory = [];
 
   double exportProgress = .0;
 
   bool showExportUI = false;
+
+  var showHistoryType = 0; // 0 all together, 1 student by student
 
   @override
   void initState() {
@@ -123,7 +126,27 @@ class _StaticScreenState extends State<StatefulWidget> {
               ),
 
               // ui search list
-              const Text("搜索记录统计："),
+              Row(
+                children: [
+                  const Text("搜索记录："),
+                  Wrap(
+                    spacing: 8,
+                    children: List.generate(2, (index) {
+                      return ChoiceChip(
+                        label: Text(index == 0 ? "统计" : "详细"),
+                        selected: index == showHistoryType,
+                        onSelected: (selected) {
+                          if (selected) {
+                            setState(() {
+                              showHistoryType = index;
+                            });
+                          }
+                        },
+                      );
+                    }).toList(),
+                  )
+                ],
+              ),
               if (showExportUI)
                 Row(
                   // mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -143,18 +166,35 @@ class _StaticScreenState extends State<StatefulWidget> {
               Expanded(
                 child: Stack(
                   children: [
-                    Positioned.fill(
-                      child: ListView.builder(
-                          // fix bug Cannot hit test a render box that has never been laid out.
-                          shrinkWrap: true,
-                          itemCount: searchMap.entries.length,
-                          itemBuilder: (context, index) => Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Text(
-                                "${searchMap.keys.elementAt(index)} —— "
-                                "${searchMap.values.elementAt(index)} 次",
-                              ))),
-                    ),
+                    if (showHistoryType == 0)
+                      Positioned.fill(
+                        child: ListView.builder(
+                            // fix bug Cannot hit test a render box that has never been laid out.
+                            shrinkWrap: true,
+                            itemCount: searchMap.entries.length,
+                            itemBuilder: (context, index) => Padding(
+                                padding: const EdgeInsets.all(4),
+                                child: Row(
+                                  children: [
+                                    SizedBox(
+                                      width: 300,
+                                      child: Text(
+                                          "${searchMap.keys.elementAt(index)}"),
+                                    ),
+                                    Text(
+                                        "${searchMap.values.elementAt(index)} 次"),
+                                  ],
+                                ))),
+                      ),
+                    if (showHistoryType == 1)
+                      Positioned.fill(
+                        child: ListView.builder(
+                            // fix bug Cannot hit test a render box that has never been laid out.
+                            shrinkWrap: true,
+                            itemCount: searchDetailList.length,
+                            itemBuilder: (context, index) =>
+                                SearchDetailRow(searchDetailList[index])),
+                      ),
                     Positioned(
                       bottom: 32,
                       right: 32,
@@ -209,15 +249,12 @@ class _StaticScreenState extends State<StatefulWidget> {
       } else if (index == 1) {
         start = DateTime.now().subtract(const Duration(days: 7));
       } else {
-        if (kDebugMode) {
-          start = DateTime.now().subtract(const Duration(minutes: 10));
-        } else {
-          start = DateTime.now().subtract(const Duration(days: 30));
-        }
+        start = DateTime.now().subtract(const Duration(days: 30));
       }
       querySearchHistory(start, DateTime.now());
     } else if (index == 3) {
-      querySearchHistoryAll();
+      querySearchHistory(
+          DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
     } else {
       // pickTime()
       onDatePickPressed(context);
@@ -240,20 +277,30 @@ class _StaticScreenState extends State<StatefulWidget> {
   void querySearchHistory(DateTime start, DateTime end) {
     curStarDate = start;
     curEndDate = end;
-    appModel.getSearchHistory(start, end, curClassId).then((map) {
-      searchMap = map;
-      searchHistory.clear();
-      for (var et in searchMap.entries) {
-        searchHistory.add('${et.key} —— ${et.value}');
-      }
-      setState(() {});
-    });
+    if (showHistoryType == 0) {
+      appModel.getSearchHistory(start, end, curClassId).then((map) {
+        searchMap = map;
+        searchHistory.clear();
+        for (var et in searchMap.entries) {
+          searchHistory.add('${et.key} —— ${et.value}');
+        }
+        setState(() {});
+      });
+    } else {
+      curStarDate = start;
+      curEndDate = end;
+      appModel.getSearchHistoryDetail(start, end, curClassId).then((data) {
+        setState(() {
+          searchDetailList = data;
+        });
+      });
+    }
   }
 
-  void querySearchHistoryAll() {
-    querySearchHistory(
-        DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
-  }
+  // void querySearchHistoryAll() {
+  //   querySearchHistory(
+  //       DateTime.now().subtract(const Duration(days: 3000)), DateTime.now());
+  // }
 
   void updateUI() {
     setState(() {});
@@ -267,10 +314,36 @@ class _StaticScreenState extends State<StatefulWidget> {
       last.id = "";
       classList.add(last);
       // curClassId=classList[curClassChipIndex].id;
-      curClassChipIndex = classList.length - 1;
+      // curClassChipIndex = classList.length - 1;
+      curClassChipIndex = 0;
       updateUI();
     }).catchError((onError) {
       log("load classes error: $onError");
     });
+  }
+}
+
+class SearchDetailRow extends StatelessWidget {
+  SearchDetailRow(this.sr);
+
+  SearchRequest sr;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        SizedBox(
+          width: 500,
+          child: Row(
+            children: [
+              Expanded(child: Text('${sr.clasName}')),
+              Expanded(child: Text('${sr.userName}')),
+              Expanded(child: Text('${sr.time}')),
+            ],
+          ),
+        ),
+        Expanded(child: Text('${sr.reg}')),
+      ],
+    );
   }
 }

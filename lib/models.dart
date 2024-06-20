@@ -203,15 +203,14 @@ class AppModel extends ChangeNotifier {
   }
 
   sendSearchRequest(String reg) {
-    var request = SearchRequest();
-    request.reg = reg;
-    request.userId = userInfo.id;
-    request.userName = userInfo.name;
+    var request = LCObject(SearchRequest.TABLE);
+    request['reg'] = reg;
+    request['userId'] = lcUser?.objectId ?? "";
+    request['userName'] = userInfo.name;
     var clas = userInfo.clas;
     if (clas != null) {
-      request.clasId = clas.id;
-      log('clas $clas');
-      request.clasName = clas.name;
+      request['clasId'] = clas.id;
+      request['clasName'] = clas.name;
     }
     request.save();
 
@@ -232,20 +231,6 @@ class AppModel extends ChangeNotifier {
     query.limit(1000);
     List<LCObject>? list = await query.find();
 
-    // void main() {
-    //   var temp= {
-    //     'A' : 3,
-    //     'B' : 1,
-    //     'C' : 2
-    //   };
-    //
-    //   var sortedKeys = temp.keys.toList(growable:false)
-    //     ..sort((k1, k2) => temp[k1].compareTo(temp[k2]));
-    //   LinkedHashMap sortedMap = new LinkedHashMap
-    //       .fromIterable(sortedKeys, key: (k) => k, value: (k) => temp[k]);
-    //   print(sortedMap);
-    // }
-
     Map<String, int> map = {};
     for (var sr in list!) {
       var reg = sr['reg'];
@@ -257,6 +242,28 @@ class AppModel extends ChangeNotifier {
     log("Search history: $sortedByValueMap");
 
     return sortedByValueMap;
+  }
+
+  getSearchHistoryDetail(DateTime start, DateTime end, String? classId) async {
+    var query = LCQuery("SearchRequest");
+    query.whereGreaterThan('createdAt', start);
+    query.whereLessThan("createdAt", end);
+    query.orderByDescending('createdAt');
+    log("getSearchHistory $start $end $classId");
+    if (classId != null && classId != "") {
+      query.whereEqualTo("clasId", classId);
+    }
+    query.limit(1000);
+    List<LCObject>? lcoList = await query.find();
+    List<SearchRequest> list = [];
+    if (lcoList != null) {
+      for (var i in lcoList) {
+        var sr=SearchRequest.parse(i);
+        list.add(sr);
+      }
+      list.sort((a,b) => (a.userName??"").compareTo(b.userName??""));
+    }
+    return list;
   }
 
   Future<void> testDbAsync() async {

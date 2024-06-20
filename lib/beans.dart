@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:intl/intl.dart';
 import 'package:leancloud_storage/leancloud.dart';
 // part 'user.g.dart';
 
@@ -143,28 +144,50 @@ class School {
   }
 }
 
-class SearchRequest extends LCObject {
-  String get reg => this['reg'];
+class SearchRequest {
+  static const TABLE = 'SearchRequest';
 
-  set reg(String value) => this['reg'] = value;
+  String? id;
+  String? reg;
+  String? userId;
+  String? userName;
+  String? clasId;
+  String? clasName;
+  String? time;
 
-  String? get userId => this['userId'];
+  // String get reg => this['reg'];
+  //
+  // set reg(String value) => this['reg'] = value;
+  //
+  // String? get userId => this['userId'];
+  //
+  // set userId(String? value) => this['userId'] = value;
+  //
+  // String? get clasId => this['clasId'];
+  //
+  // String? get userName => this['userName'];
+  //
+  // set userName(String? value) => this['userName'] = value;
+  //
+  // set clasId(String? value) => this['clasId'] = value;
+  //
+  // String? get clasName => this['clasName'];
+  //
+  // set clasName(String? value) => this['clasName'] = value;
+  //
+  // SearchRequest() : super('SearchRequest');
 
-  set userId(String? value) => this['userId'] = value;
-
-  String? get clasId => this['clasId'];
-
-  String? get userName => this['userName'];
-
-  set userName(String? value) => this['userName'] = value;
-
-  set clasId(String? value) => this['clasId'] = value;
-
-  String? get clasName => this['clasName'];
-
-  set clasName(String? value) => this['clasName'] = value;
-
-  SearchRequest() : super('SearchRequest');
+  static parse(LCObject lco) {
+    var sr = SearchRequest();
+    sr.id = lco.objectId ?? "";
+    sr.reg = lco['reg'];
+    sr.userId = lco['userId'];
+    sr.userName = lco['userName'];
+    sr.clasId = lco['clasId'];
+    sr.clasName = lco['clasName'];
+    sr.time = DateFormat('yyyy-MM-dd kk:mm').format(lco.createdAt!);
+    return sr;
+  }
 }
 
 class DataUtil {
