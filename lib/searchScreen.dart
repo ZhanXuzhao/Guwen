@@ -9,6 +9,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'dir_list.dart';
 
@@ -308,8 +309,13 @@ class _SearchScreenState extends State<StatefulWidget> {
         FileListPage.launch(context, kDebugMode ? textFilePathDebug : "", true);
       }
     } else {
+      // var pageIndex = index == 4 ? webGgxds : webQxk;
+      // WebScreen.launch(context, pageIndex);
+      var webGgxds = 'https://www.guoxuedashi.net/';
+      var webQxk = 'https://qxk.bnu.edu.cn/';
       var url = index == 4 ? webGgxds : webQxk;
-      WebScreen.launch(context, url);
+      Uri uri = Uri.parse(url);
+      launchUrl(uri);
     }
 
     setState(() {});
