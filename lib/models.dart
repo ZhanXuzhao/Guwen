@@ -579,6 +579,7 @@ class AppModel extends ChangeNotifier {
   Future<void> login(String username, String password) async {
     await LCUser.login(username, password);
     initUser();
+    sp.setString("lastLoginEmail", username);
     // for (var l in _AppModelListeners) {
     //   l.onLogin();
     // }
@@ -783,6 +784,10 @@ class AppModel extends ChangeNotifier {
 
   Future<void> resetPassword(String email) async {
     await LCUser.requestPasswordReset(email);
+  }
+
+  String getLastLoginEmail() {
+    return sp.getString("lastLoginEmail") ?? "";
   }
 }
 

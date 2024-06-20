@@ -50,11 +50,16 @@ class _ProfileScreenState extends State<StatefulWidget> {
   var userTypeChoice = ['学生', '老师'];
   int? curUserType;
 
+  var obscurePassword = true;
+
+  IconData passwordIcon = Icons.visibility;
+
   // SchoolIdSteam schoolIdSteam = SchoolIdSteam();
 
   @override
   void initState() {
     appModel = AppModel();
+    emailController.text = appModel.getLastLoginEmail();
     // appModel.init();
     // loadClasses();
     // appModel.init();
@@ -292,12 +297,33 @@ class _ProfileScreenState extends State<StatefulWidget> {
                   const SizedBox(
                     height: 8,
                   ),
-                  TextField(
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      hintText: '密码',
-                    ),
-                    controller: passwordController,
+
+                  Stack(
+                    children: [
+                      TextField(
+                        obscureText: obscurePassword,
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          hintText: '密码',
+                        ),
+                        controller: passwordController,
+                      ),
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        child: IconButton(
+                            onPressed: () {
+                              setState(() {
+                                obscurePassword = !obscurePassword;
+                                passwordIcon = obscurePassword
+                                    ? Icons.visibility
+                                    : Icons.visibility_off;
+                              });
+                            },
+                            icon: Icon(passwordIcon)),
+                      )
+                    ],
                   ),
                   // TextField(
                   //   decoration: const InputDecoration(
@@ -370,24 +396,26 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       ),
                       ElevatedButton(
                           onPressed: () {
-                            if(emailController.text.isEmpty){
+                            if (emailController.text.isEmpty) {
                               setState(() {
-                                loginMsg="请输入邮箱";
-                                showLoginMsg=true;
+                                loginMsg = "请输入邮箱";
+                                showLoginMsg = true;
                               });
                               return;
                             }
-                            appModel.resetPassword(emailController.text).then((_){
+                            appModel
+                                .resetPassword(emailController.text)
+                                .then((_) {
                               loginMsg = "密码重置链接已发送至邮箱，请查收";
-                            }).catchError((e){
-                              if(e is LCException){
+                            }).catchError((e) {
+                              if (e is LCException) {
                                 loginMsg = "${e.message}";
                               } else {
                                 loginMsg = e.toString();
                               }
-                            }).whenComplete((){
+                            }).whenComplete(() {
                               setState(() {
-                                showLoginMsg=true;
+                                showLoginMsg = true;
                               });
                             });
                           },
@@ -409,7 +437,9 @@ class _ProfileScreenState extends State<StatefulWidget> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  Center(child: Text('version: ${AppModel.instance.packageInfo.version}')),
+                  Center(
+                      child: Text(
+                          'version: ${AppModel.instance.packageInfo.version}')),
                 ],
               ),
             ),
