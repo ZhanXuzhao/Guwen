@@ -47,7 +47,7 @@ class _ProfileScreenState extends State<StatefulWidget> {
   var modifyUserNameController = TextEditingController();
   var isModifyingUserType = false;
   var modifyingUserTypeMsg = '';
-  var userTypeChoice = ['学生', '教师'];
+  var userTypeChoice = ['学生', '老师'];
   int? curUserType;
 
   // SchoolIdSteam schoolIdSteam = SchoolIdSteam();
