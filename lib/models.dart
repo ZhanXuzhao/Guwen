@@ -780,6 +780,10 @@ class AppModel extends ChangeNotifier {
     var packageInfo = await PackageInfo.fromPlatform();
     return packageInfo.version;
   }
+
+  Future<void> resetPassword(String email) async {
+    await LCUser.requestPasswordReset(email);
+  }
 }
 
 class WriteFileWorker {

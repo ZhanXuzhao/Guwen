@@ -368,7 +368,30 @@ class _ProfileScreenState extends State<StatefulWidget> {
                       const SizedBox(
                         width: 8,
                       ),
-
+                      ElevatedButton(
+                          onPressed: () {
+                            if(emailController.text.isEmpty){
+                              setState(() {
+                                loginMsg="请输入邮箱";
+                                showLoginMsg=true;
+                              });
+                              return;
+                            }
+                            appModel.resetPassword(emailController.text).then((_){
+                              loginMsg = "密码重置链接已发送至邮箱，请查收";
+                            }).catchError((e){
+                              if(e is LCException){
+                                loginMsg = "${e.message}";
+                              } else {
+                                loginMsg = e.toString();
+                              }
+                            }).whenComplete((){
+                              setState(() {
+                                showLoginMsg=true;
+                              });
+                            });
+                          },
+                          child: const Text("重置密码")),
                       // debug login
                       if (kDebugMode)
                         ElevatedButton(
