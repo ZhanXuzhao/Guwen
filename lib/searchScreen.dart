@@ -304,7 +304,7 @@ class _SearchScreenState extends State<StatefulWidget> {
     if (index < 4) {
       curSearchTab = selected ? index : curSearchTab;
       appModel.setYuliaoType(index);
-      if (curSearchTab == searchTabs.length - 1) {
+      if (curSearchTab == 3) {
         FileListPage.launch(context, kDebugMode ? textFilePathDebug : "", true);
       }
     } else {
