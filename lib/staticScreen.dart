@@ -1,9 +1,12 @@
+import 'dart:collection';
 import 'dart:developer';
 
+import 'package:csv/csv.dart';
 import 'package:f05/beans.dart';
 import 'package:f05/models.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import 'profileScreen.dart';
 
@@ -32,15 +35,19 @@ class _StaticScreenState extends State<StatefulWidget> {
 
   var curClassChipIndex = 0;
   String? curClassId;
-  Map<String, int> searchMap = {};
-  List<SearchRequest> searchDetailList = [];
-  List<String> searchHistory = [];
+
+  // Map<String, int> searchMap = {};
+  // Map<String, List<SearchRequest>> searchDetails = {};
+  List<List<String>> searchDetailRowStringList = [];
+  List<List<String>> searchStaticRowStringList = [];
+
+  // List<String> searchHistory = [];
 
   double exportProgress = .0;
 
   bool showExportUI = false;
 
-  var showHistoryType = 0; // 0 all together, 1 student by student
+  var showSearchHistoryType = 0; // 0 all together, 1 student by student
 
   @override
   void initState() {
@@ -134,12 +141,11 @@ class _StaticScreenState extends State<StatefulWidget> {
                     children: List.generate(2, (index) {
                       return ChoiceChip(
                         label: Text(index == 0 ? "统计" : "详细"),
-                        selected: index == showHistoryType,
+                        selected: index == showSearchHistoryType,
                         onSelected: (selected) {
                           if (selected) {
-                            setState(() {
-                              showHistoryType = index;
-                            });
+                            showSearchHistoryType = index;
+                            querySearchHistory(curStarDate, curEndDate);
                           }
                         },
                       );
@@ -166,58 +172,45 @@ class _StaticScreenState extends State<StatefulWidget> {
               Expanded(
                 child: Stack(
                   children: [
-                    if (showHistoryType == 0)
+                    if (showSearchHistoryType == 0)
                       Positioned.fill(
                         child: ListView.builder(
-                            // fix bug Cannot hit test a render box that has never been laid out.
-                            shrinkWrap: true,
-                            itemCount: searchMap.entries.length,
-                            itemBuilder: (context, index) => Padding(
-                                padding: const EdgeInsets.all(4),
-                                child: Row(
-                                  children: [
-                                    SizedBox(
-                                      width: 300,
-                                      child: Text(
-                                          "${searchMap.keys.elementAt(index)}"),
-                                    ),
-                                    Text(
-                                        "${searchMap.values.elementAt(index)} 次"),
-                                  ],
-                                ))),
+                          // fix bug Cannot hit test a render box that has never been laid out.
+                          shrinkWrap: true,
+                          itemCount: searchStaticRowStringList.length,
+                          itemBuilder: (context, index) => SearchStaticRow(
+                            index: index,
+                            rowData: searchStaticRowStringList[index],
+                          ),
+                          // Padding(
+                          //   padding: const EdgeInsets.all(4),
+                          //   child: SearchStaticRow(index == 0
+                          //       ? null
+                          //       : [
+                          //           "${searchMap.keys.elementAt(index - 1)}",
+                          //           "${searchMap.values.elementAt(index - 1)}"
+                          //         ]),
+                          // )),
+                        ),
                       ),
-                    if (showHistoryType == 1)
+                    if (showSearchHistoryType == 1)
                       Positioned.fill(
                         child: ListView.builder(
-                            // fix bug Cannot hit test a render box that has never been laid out.
-                            shrinkWrap: true,
-                            itemCount: searchDetailList.length,
-                            itemBuilder: (context, index) =>
-                                SearchDetailRow(searchDetailList[index])),
+                          // fix bug Cannot hit test a render box that has never been laid out.
+                          shrinkWrap: true,
+                          itemCount: searchDetailRowStringList.length,
+                          // +1 for header
+                          itemBuilder: (context, index) => SearchDetailRow(
+                              index: index,
+                              rowData: searchDetailRowStringList[index]),
+                        ),
                       ),
                     Positioned(
                       bottom: 32,
                       right: 32,
                       child: FloatingActionButton(
                         onPressed: () {
-                          AppModel.instance
-                              .pickDirAndExportData(searchHistory, 1, (p) {
-                            exportProgress = p.progress;
-                            if (p.status == ProgressEvent.start) {
-                              setState(() {
-                                showExportUI = true;
-                              });
-                            } else if (p.status == ProgressEvent.finish ||
-                                p.status == ProgressEvent.error) {
-                              setState(() {
-                                showExportUI = false;
-                              });
-                              showMessage("导出成功");
-                            }
-                            log("search screen progress $p");
-                          }).then((v) {
-                            showMessage('导出成功');
-                          });
+                          exportData();
                         },
                         tooltip: '导出',
                         child: const Icon(Icons.download),
@@ -231,6 +224,39 @@ class _StaticScreenState extends State<StatefulWidget> {
         )),
       ],
     );
+  }
+
+  void exportData() {
+    List<String> list = [];
+    final res = const ListToCsvConverter().convert(showSearchHistoryType == 0
+        ? searchStaticRowStringList
+        : searchDetailRowStringList);
+    list.add(res);
+
+    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var fileName = "搜索统计 $timeStr .csv";
+    AppModel.instance
+        .pickDirAndExportData(
+            data: list,
+            fileName: fileName,
+            progressListener: (p) {
+              exportProgress = p.progress;
+              if (p.status == ProgressEvent.start) {
+                setState(() {
+                  showExportUI = true;
+                });
+              } else if (p.status == ProgressEvent.finish ||
+                  p.status == ProgressEvent.error) {
+                setState(() {
+                  showExportUI = false;
+                });
+                showMessage("导出成功");
+              }
+              log("search screen progress $p");
+            })
+        .then((v) {
+      showMessage('导出成功');
+    });
   }
 
   void showMessage(String msg) {
@@ -277,24 +303,61 @@ class _StaticScreenState extends State<StatefulWidget> {
   void querySearchHistory(DateTime start, DateTime end) {
     curStarDate = start;
     curEndDate = end;
-    if (showHistoryType == 0) {
+    if (showSearchHistoryType == 0) {
       appModel.getSearchHistory(start, end, curClassId).then((map) {
-        searchMap = map;
-        searchHistory.clear();
-        for (var et in searchMap.entries) {
-          searchHistory.add('${et.key} —— ${et.value}');
-        }
-        setState(() {});
+        setState(() {
+          // searchMap = map;
+
+          // searchHistory.clear();
+          // for (var et in searchMap.entries) {
+          //   searchHistory.add('${et.key} —— ${et.value}');
+          // }
+          searchStaticRowStringList.clear();
+          searchStaticRowStringList.add([
+            '时间范围',
+            '查阅内容',
+            '总次数',
+          ]);
+          map.forEach((k, v) {
+            searchStaticRowStringList.add([getStartEndTime(), "$k", "$v"]);
+          });
+        });
       });
     } else {
       curStarDate = start;
       curEndDate = end;
       appModel.getSearchHistoryDetail(start, end, curClassId).then((data) {
         setState(() {
-          searchDetailList = data;
+          // searchDetails = data;
+          searchDetailRowStringList.clear();
+          searchDetailRowStringList.add(['班级', '用户名', '时间范围', '总次数', '查阅内容']);
+          for (var srList in data.values) {
+            var content = "";
+            for (var sr in srList) {
+              if (content.isNotEmpty) {
+                content += ';';
+              }
+              content += '${sr.reg}';
+            }
+            String time = getStartEndTime();
+            List<String> rowData = [
+              srList.first.clasName ?? "",
+              srList.first.userName ?? "",
+              time,
+              "${srList.length}",
+              content
+            ];
+            searchDetailRowStringList.add(rowData);
+          }
         });
       });
     }
+  }
+
+  String getStartEndTime() {
+    var dateFormat = DateFormat('yyyy.MM.dd');
+    var time = '${dateFormat.format(curStarDate)} - ${dateFormat.format(curEndDate)}';
+    return time;
   }
 
   // void querySearchHistoryAll() {
@@ -316,6 +379,7 @@ class _StaticScreenState extends State<StatefulWidget> {
       // curClassId=classList[curClassChipIndex].id;
       // curClassChipIndex = classList.length - 1;
       curClassChipIndex = 0;
+      curClassId = classList[curClassChipIndex].id;
       updateUI();
     }).catchError((onError) {
       log("load classes error: $onError");
@@ -323,27 +387,90 @@ class _StaticScreenState extends State<StatefulWidget> {
   }
 }
 
-class SearchDetailRow extends StatelessWidget {
-  SearchDetailRow(this.sr);
+class SearchStaticRow extends StatelessWidget {
+  SearchStaticRow({required this.index, required this.rowData});
 
-  SearchRequest sr;
+  int index;
+  List<String> rowData;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return createRow(index == 0, rowData);
+  }
+
+  Table createRow(bool showTopBorder, List<String?> rowData) {
+    var row = Table(
+      border: createTableBorder(showTopBorder),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const <int, TableColumnWidth>{
+        0: FixedColumnWidth(200),
+        1: FlexColumnWidth(),
+        2: FixedColumnWidth(80),
+      },
       children: [
-        SizedBox(
-          width: 500,
-          child: Row(
-            children: [
-              Expanded(child: Text('${sr.clasName}')),
-              Expanded(child: Text('${sr.userName}')),
-              Expanded(child: Text('${sr.time}')),
-            ],
-          ),
-        ),
-        Expanded(child: Text('${sr.reg}')),
+        TableRow(children: [
+          Center(child: Text(rowData[0]!)),
+          Center(child: Text(rowData[1]!)),
+          Center(child: Text(rowData[2]!)),
+        ])
       ],
     );
+    return row;
   }
+}
+
+class SearchDetailRow extends StatelessWidget {
+  SearchDetailRow(
+      {required this.index,
+      required this.rowData,
+      this.srList,
+      this.startTime,
+      this.endTime});
+
+  int index;
+  List<SearchRequest>? srList;
+  DateTime? startTime;
+  DateTime? endTime;
+  List<String> rowData;
+
+  @override
+  Widget build(BuildContext context) {
+    Table row = createRow(index == 0, rowData);
+    return row;
+  }
+
+  Table createRow(bool showTopBorder, List<String?> rowData) {
+    var row = Table(
+      border: createTableBorder(showTopBorder),
+      defaultVerticalAlignment: TableCellVerticalAlignment.middle,
+      columnWidths: const <int, TableColumnWidth>{
+        0: FixedColumnWidth(200),
+        1: FixedColumnWidth(200),
+        2: FixedColumnWidth(200),
+        3: FlexColumnWidth(),
+        4: FixedColumnWidth(80),
+      },
+      children: [
+        TableRow(children: [
+          Center(child: Text(rowData[0]!)),
+          Center(child: Text(rowData[1]!)),
+          Center(child: Text(rowData[2]!)),
+          Center(child: Text(rowData[4]!)),
+          Center(child: Text(rowData[3]!)),
+        ])
+      ],
+    );
+    return row;
+  }
+}
+
+TableBorder createTableBorder(bool showTopBorder) {
+  return TableBorder(
+    top: showTopBorder ? const BorderSide() : BorderSide.none,
+    right: const BorderSide(),
+    bottom: const BorderSide(),
+    left: const BorderSide(),
+    verticalInside: const BorderSide(),
+    horizontalInside: const BorderSide(),
+  );
 }

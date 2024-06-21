@@ -8,6 +8,7 @@ import 'package:f05/webScreen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
+import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -484,24 +485,31 @@ class _SearchScreenState extends State<StatefulWidget> {
     //
     // print('export success');
     // showMessage("导出成功 $path");
-
-    AppModel.instance.pickDirAndExportData(searchedTextList, 0, (p) {
-      setState(() {
-        exportProgress = p.progress;
-        if (p.status == ProgressEvent.start) {
-          setState(() {
-            showExportUI = true;
-          });
-        } else if (p.status == ProgressEvent.finish ||
-            p.status == ProgressEvent.error) {
-          setState(() {
-            showExportUI = false;
-          });
-          showMessage("导出成功");
-        }
-        log("search screen progress $p");
-      });
-    }).then((v) {
+    var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    var hws = AppModel.instance.highlightWords.join("_");
+    var fileName = "搜索结果 $hws $timeStr.txt";
+    AppModel.instance
+        .pickDirAndExportData(
+            data: searchedTextList,
+            fileName: fileName,
+            progressListener: (p) {
+              setState(() {
+                exportProgress = p.progress;
+                if (p.status == ProgressEvent.start) {
+                  setState(() {
+                    showExportUI = true;
+                  });
+                } else if (p.status == ProgressEvent.finish ||
+                    p.status == ProgressEvent.error) {
+                  setState(() {
+                    showExportUI = false;
+                  });
+                  showMessage("导出成功");
+                }
+                log("search screen progress $p");
+              });
+            })
+        .then((v) {
       // showMessage("导出成功");
     });
   }

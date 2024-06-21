@@ -220,7 +220,8 @@ class AppModel extends ChangeNotifier {
     // sr.save();
   }
 
-  getSearchHistory(DateTime start, DateTime end, String? classId) async {
+  Future<Map<String, int>> getSearchHistory(
+      DateTime start, DateTime end, String? classId) async {
     var query = LCQuery("SearchRequest");
     query.whereGreaterThan('createdAt', start);
     query.whereLessThan("createdAt", end);
@@ -244,7 +245,8 @@ class AppModel extends ChangeNotifier {
     return sortedByValueMap;
   }
 
-  getSearchHistoryDetail(DateTime start, DateTime end, String? classId) async {
+  Future<Map<String, List<SearchRequest>>> getSearchHistoryDetail(
+      DateTime start, DateTime end, String? classId) async {
     var query = LCQuery("SearchRequest");
     query.whereGreaterThan('createdAt', start);
     query.whereLessThan("createdAt", end);
@@ -255,15 +257,17 @@ class AppModel extends ChangeNotifier {
     }
     query.limit(1000);
     List<LCObject>? lcoList = await query.find();
-    List<SearchRequest> list = [];
+    Map<String, List<SearchRequest>> map = {};
     if (lcoList != null) {
       for (var i in lcoList) {
-        var sr=SearchRequest.parse(i);
-        list.add(sr);
+        SearchRequest sr = SearchRequest.parse(i);
+        if (!map.containsKey(sr.userId)) {
+          map[sr.userId ?? ""] = [];
+        }
+        map[sr.userId]!.add(sr);
       }
-      list.sort((a,b) => (a.userName??"").compareTo(b.userName??""));
     }
-    return list;
+    return map;
   }
 
   Future<void> testDbAsync() async {
@@ -272,10 +276,6 @@ class AppModel extends ChangeNotifier {
     var student = await query.first();
     log(student.toString());
   }
-
-  // initUserClass() {
-  //   setUserClass(null);
-  // }
 
   Future<void> setUserClass(Clas co) async {
     if (userInfo.lco == null) {
@@ -716,8 +716,10 @@ class AppModel extends ChangeNotifier {
   }
 
   /// type 0 search result, 1 static result
-  Future<void> pickDirAndExportData(List<String> data, int type,
-      ValueSetter<ProgressEvent>? progressListener) async {
+  Future<void> pickDirAndExportData(
+      {required List<String> data,
+      required String fileName,
+      ValueSetter<ProgressEvent>? progressListener}) async {
     String? selectedDirectory = await FilePicker.platform.getDirectoryPath();
     if (selectedDirectory != null) {
       // User canceled the picker
@@ -726,10 +728,11 @@ class AppModel extends ChangeNotifier {
       if (!dir.existsSync()) {
         dir.createSync(recursive: true);
       }
-      var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-      var hws = highlightWords.join("_");
-      var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 $timeStr";
-      var filePath = "$selectedDirectory/$fileName.txt";
+      // var timeStr = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+      // var hws = highlightWords.join("_");
+      // var fileName = type == 0 ? "搜索结果 $hws $timeStr" : "搜索统计 $timeStr";
+      // var fileSuffix = type == 0 ? ".txt" : ".csv";
+      var filePath = "$selectedDirectory/$fileName";
       var worker = WriteFileWorker((p) {
         if (progressListener != null) {
           progressListener(p);
@@ -898,3 +901,15 @@ List<String> filterTextFiles(List<String> list) {
       .where((element) => element.endsWith('.txt') || element.endsWith('.TXT'))
       .toList();
 }
+
+// class SearchRequestStatic {
+//   String? userId;
+//   String? regList;
+//   String? userName;
+//   String? clasName;
+//   String? time;
+//
+//   static from(SearchRequest sr){
+//     SearchRequestStatic srs = SearchRequestStatic();
+//   }
+// }
