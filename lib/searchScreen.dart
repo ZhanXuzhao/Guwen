@@ -4,12 +4,10 @@ import 'dart:io';
 
 import 'package:f05/models.dart';
 import 'package:f05/profileScreen.dart';
-import 'package:f05/webScreen.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:highlight_text/highlight_text.dart';
 import 'package:intl/intl.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'dir_list.dart';
@@ -43,7 +41,15 @@ class _SearchScreenState extends State<StatefulWidget> {
   var searchDurationText = "";
   var exampleSearchText = ['之', '之.者', '之.*者', '之.{1,4}者'];
   int? curSearchTab = 0;
-  var searchTabs = ["古代汉语", "现代汉语", "近代报刊", "指定文献", "国学大师", "汉字全息资源应用系统"];
+  var links = {
+    "古代汉语": '',
+    "现代汉语": '',
+    "近代报刊": '',
+    "指定文献": '',
+    'AI太炎': 'https://t.shenshen.wiki/',
+    '国学大师': 'https://www.guoxuedashi.net/',
+    '汉字全息资源应用系统': 'https://qxk.bnu.edu.cn/',
+  };
   var showExportButton = false;
 
   RegExp badLineReg = RegExp('([a-z]|[A-Z])|语料');
@@ -177,10 +183,10 @@ class _SearchScreenState extends State<StatefulWidget> {
                 runSpacing: 8,
                 alignment: WrapAlignment.start,
                 children: List<Widget>.generate(
-                  searchTabs.length,
+                  links.length,
                   (int index) {
                     return ChoiceChip(
-                      label: Text(searchTabs[index]),
+                      label: Text(links.keys.elementAt(index)),
                       selected: curSearchTab == index,
                       onSelected: (bool selected) {
                         onSearchTabClick(selected, index, context);
@@ -310,12 +316,7 @@ class _SearchScreenState extends State<StatefulWidget> {
         FileListPage.launch(context, kDebugMode ? textFilePathDebug : "", true);
       }
     } else {
-      // var pageIndex = index == 4 ? webGgxds : webQxk;
-      // WebScreen.launch(context, pageIndex);
-      var webGgxds = 'https://www.guoxuedashi.net/';
-      var webQxk = 'https://qxk.bnu.edu.cn/';
-      var url = index == 4 ? webGgxds : webQxk;
-      Uri uri = Uri.parse(url);
+      Uri uri = Uri.parse(links.values.elementAt(index));
       launchUrl(uri);
     }
 
